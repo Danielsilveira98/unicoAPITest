@@ -1,0 +1,34 @@
+linters:
+  disable-all: true
+  enable:
+    # Defaults
+    - deadcode
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - varcheck
+    # Optionals
+    - containedctx
+    - decorder
+    - dogsled
+    # - dupl
+    - errname
+    - gochecknoglobals
+    - gochecknoinits
+    - goconst
+    - godot
+    - goerr113 # see
+    - goheader
+    - goprintffuncname
+    - lll
+    - misspell
+    - nestif
+    - nilerr
+    - nosnakecase
+    - usestdlibvars
+    - whitespace
+    - wrapcheck
