@@ -11,13 +11,6 @@ type StreetMarketFilter struct {
 	Neighborhood string
 }
 
-type StreetMarketGetInput struct {
-	District     string
-	Region5      string
-	Name         string
-	Neighborhood string
-}
-
 type StreetMarket struct {
 	ID            string  // 	ID
 	Long          float64 // LONG

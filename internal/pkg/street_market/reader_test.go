@@ -52,21 +52,14 @@ func TestStreetMarketReader_List(t *testing.T) {
 
 	srv := NewReader(repoMock)
 
-	inp := domain.StreetMarketGetInput{
+	wInp := domain.StreetMarketFilter{
 		District:     want.District,
 		Region5:      want.Region5,
 		Name:         want.Name,
 		Neighborhood: want.Neighborhood,
 	}
 
-	wInp := domain.StreetMarketFilter{
-		District:     inp.District,
-		Region5:      inp.Region5,
-		Name:         inp.Name,
-		Neighborhood: inp.Neighborhood,
-	}
-
-	got, _ := srv.List(context.TODO(), inp)
+	got, _ := srv.List(context.TODO(), wInp)
 
 	if diff := cmp.Diff(&want, got); diff != "" {
 		t.Errorf("unexpected return (-want +got):\n%s", diff)
@@ -80,13 +73,13 @@ func TestStreetMarketReader_List(t *testing.T) {
 func TestStreetMarketReader_List_Error(t *testing.T) {
 	testCases := map[string]struct {
 		wErr error
-		inp  domain.StreetMarketGetInput
+		inp  domain.StreetMarketFilter
 		rErr error
 		rRtn *domain.StreetMarket
 	}{
 		"When a unexpected error occurs in reader repository": {
 			wErr: domain.ErrUnexpected,
-			inp:  domain.StreetMarketGetInput{},
+			inp:  domain.StreetMarketFilter{},
 			rErr: errSome,
 			rRtn: nil,
 		},

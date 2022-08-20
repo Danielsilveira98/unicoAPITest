@@ -18,7 +18,7 @@ func NewReader(repo repositoryReader) *StreetMarketReader {
 	return &StreetMarketReader{repo}
 }
 
-func (s *StreetMarketReader) List(ctx context.Context, query domain.StreetMarketGetInput) (*domain.StreetMarket, error) {
+func (s *StreetMarketReader) List(ctx context.Context, query domain.StreetMarketFilter) (*domain.StreetMarket, error) {
 	filter := domain.StreetMarketFilter{
 		District:     query.District,
 		Region5:      query.Region5,
