@@ -61,9 +61,13 @@ func (s *StreetMarketWriter) Create(ctx context.Context, inp domain.StreetMarket
 	return sm.ID, nil
 }
 
-func (s *StreetMarketWriter) Edit(ctx context.Context, ID string, inp domain.StreetMarketEditInput) error {
+func (s *StreetMarketWriter) Edit(ctx context.Context, ID domain.SMID, inp domain.StreetMarketEditInput) error {
+	if err := ID.Validate(); err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
 	sm := domain.StreetMarket{
-		ID:            ID,
+		ID:            string(ID),
 		Long:          inp.Long,
 		Lat:           inp.Lat,
 		SectCens:      inp.SectCens,

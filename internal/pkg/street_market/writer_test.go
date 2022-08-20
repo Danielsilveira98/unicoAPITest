@@ -174,7 +174,7 @@ func TestStreetMarketWriter_Edit(t *testing.T) {
 
 	srv := NewWriter(repoMock, idGenMock)
 
-	id := "07468c29-cd01-414d-adcb-68282eb94d9a"
+	var id domain.SMID = "07468c29-cd01-414d-adcb-68282eb94d9a"
 	editInp := domain.StreetMarketEditInput{
 		Long:          -46548146,
 		Lat:           -23568390,
@@ -201,7 +201,7 @@ func TestStreetMarketWriter_Edit(t *testing.T) {
 	}
 
 	want := domain.StreetMarket{
-		ID:            id,
+		ID:            string(id),
 		Long:          editInp.Long,
 		Lat:           editInp.Lat,
 		SectCens:      editInp.SectCens,
@@ -229,14 +229,21 @@ func TestStreetMarketWriter_Edit_Error(t *testing.T) {
 	testCases := map[string]struct {
 		rErr error
 		wErr error
+		id   domain.SMID
 	}{
 		"When entity not exists": {
 			rErr: domain.ErrNothingUpdated,
 			wErr: domain.ErrSMNotFound,
+			id:   "51557ef2-dfe8-485d-90e0-c7adf4e59581",
 		},
 		"When a unexpected error occurs in repository": {
 			rErr: errSome,
 			wErr: domain.ErrUnexpected,
+			id:   "c882edc1-c1f3-4b20-b8f6-36156d99bc48",
+		},
+		"When id is invalid": {
+			wErr: domain.ErrInpValidation,
+			id:   "invalid",
 		},
 	}
 
@@ -252,7 +259,7 @@ func TestStreetMarketWriter_Edit_Error(t *testing.T) {
 
 			srv := NewWriter(repoMock, idGenMock)
 
-			gErr := srv.Edit(context.TODO(), "1d35c511-8156-4063-ad15-65fac38e82ce", domain.StreetMarketEditInput{})
+			gErr := srv.Edit(context.TODO(), tc.id, domain.StreetMarketEditInput{})
 
 			if !errors.Is(gErr, tc.wErr) {
 				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
