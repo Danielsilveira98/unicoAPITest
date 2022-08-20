@@ -2,11 +2,9 @@ package domain
 
 import (
 	"fmt"
-
-	"github.com/google/uuid"
 )
 
-type StreetMarketGetQuery struct {
+type StreetMarketFilter struct {
 	District     string
 	Region5      string
 	Name         string
@@ -14,16 +12,10 @@ type StreetMarketGetQuery struct {
 }
 
 type StreetMarketGetInput struct {
-	ID    string
-	Query StreetMarketGetQuery
-}
-
-func (i *StreetMarketGetInput) Validate() error {
-	if _, err := uuid.Parse(i.ID); err != nil {
-		return fmt.Errorf("%w The ID can be a valid UUID.", ErrInpValidation)
-	}
-
-	return nil
+	District     string
+	Region5      string
+	Name         string
+	Neighborhood string
 }
 
 type StreetMarket struct {

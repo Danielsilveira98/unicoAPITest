@@ -2,13 +2,12 @@ package streetmarket
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Danielsilveira98/unicoAPITest/internal/domain"
 )
 
 type repositoryReader interface {
-	GetByID(ctx context.Context, ID string, query domain.StreetMarketGetQuery) (*domain.StreetMarket, error)
+	List(ctx context.Context, query domain.StreetMarketFilter) (*domain.StreetMarket, error)
 }
 
 type StreetMarketReader struct {
@@ -19,12 +18,15 @@ func NewReader(repo repositoryReader) *StreetMarketReader {
 	return &StreetMarketReader{repo}
 }
 
-func (s *StreetMarketReader) Get(ctx context.Context, inp domain.StreetMarketGetInput) (*domain.StreetMarket, error) {
-	if err := inp.Validate(); err != nil {
-		return nil, fmt.Errorf("%w", err)
+func (s *StreetMarketReader) List(ctx context.Context, query domain.StreetMarketGetInput) (*domain.StreetMarket, error) {
+	filter := domain.StreetMarketFilter{
+		District:     query.District,
+		Region5:      query.Region5,
+		Name:         query.Name,
+		Neighborhood: query.Neighborhood,
 	}
 
-	sm, err := s.repo.GetByID(ctx, inp.ID, inp.Query)
+	sm, err := s.repo.List(ctx, filter)
 	if err != nil {
 		return nil, domain.ErrUnexpected
 	}
