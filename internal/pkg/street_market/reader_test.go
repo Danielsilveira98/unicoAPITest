@@ -80,8 +80,6 @@ func TestStreetMarketReader_Get(t *testing.T) {
 	}
 }
 
-var errSome = errors.New("some error")
-
 func TestStreetMarketReader_Get_Error(t *testing.T) {
 	testCases := map[string]struct {
 		wErr error
