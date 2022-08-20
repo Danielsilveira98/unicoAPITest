@@ -2,7 +2,19 @@ package domain
 
 import (
 	"fmt"
+
+	"github.com/google/uuid"
 )
+
+type SMID string
+
+func (s *SMID) Validate() error {
+	if _, err := uuid.Parse(string(*s)); err != nil {
+		return fmt.Errorf("%w IS is an invalid UUID.", ErrInpValidation)
+	}
+
+	return nil
+}
 
 type StreetMarketFilter struct {
 	District     string

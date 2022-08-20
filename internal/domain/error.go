@@ -9,4 +9,5 @@ var (
 	ErrForeignKeyNotExists = errors.New("Foreign key not exists.")
 	ErrNothingUpdated      = errors.New("Nothing updated.")
 	ErrSMNotFound          = errors.New("Street Market not found.")
+	ErrNothingDeleted      = errors.New("Nothing deleted.")
 )
