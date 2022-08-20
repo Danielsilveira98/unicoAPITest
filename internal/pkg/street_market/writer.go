@@ -9,6 +9,7 @@ import (
 
 type repositoryWriter interface {
 	Create(ctx context.Context, streetMarket domain.StreetMarket) error
+	Update(ctx context.Context, sm domain.StreetMarket) error
 }
 
 type uuidGenerator func() string
@@ -58,4 +59,38 @@ func (s *StreetMarketWriter) Create(ctx context.Context, inp domain.StreetMarket
 	}
 
 	return sm.ID, nil
+}
+
+func (s *StreetMarketWriter) Edit(ctx context.Context, ID string, inp domain.StreetMarketEditInput) error {
+	sm := domain.StreetMarket{
+		ID:            ID,
+		Long:          inp.Long,
+		Lat:           inp.Lat,
+		SectCens:      inp.SectCens,
+		Area:          inp.Area,
+		IDdist:        inp.IDdist,
+		District:      inp.District,
+		IDSubTH:       inp.IDSubTH,
+		SubTownHall:   inp.SubTownHall,
+		Region5:       inp.Region5,
+		Region8:       inp.Region8,
+		Name:          inp.Name,
+		Register:      inp.Register,
+		Street:        inp.Street,
+		Number:        inp.Number,
+		Neighborhood:  inp.Neighborhood,
+		AddrExtraInfo: inp.AddrExtraInfo,
+	}
+
+	err := s.repo.Update(ctx, sm)
+	if err != nil {
+		switch err {
+		case domain.ErrNothingUpdated:
+			return domain.ErrSMNotFound
+		default:
+			return domain.ErrUnexpected
+		}
+	}
+
+	return nil
 }

@@ -9,9 +9,13 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+var errSome = errors.New("some error")
+
 type stubRepositoryWriter struct {
 	createSMInp domain.StreetMarket
 	create      func(ctx context.Context, sm domain.StreetMarket) error
+	updateInp   domain.StreetMarket
+	update      func(ctx context.Context, sm domain.StreetMarket) error
 }
 
 func (s *stubRepositoryWriter) Create(
@@ -20,6 +24,11 @@ func (s *stubRepositoryWriter) Create(
 ) error {
 	s.createSMInp = sm
 	return s.create(ctx, sm)
+}
+
+func (s *stubRepositoryWriter) Update(ctx context.Context, sm domain.StreetMarket) error {
+	s.updateInp = sm
+	return s.update(ctx, sm)
 }
 
 func TestStreetMarketWriter_Create(t *testing.T) {
@@ -87,8 +96,6 @@ func TestStreetMarketWriter_Create(t *testing.T) {
 	}
 }
 
-var errSome = errors.New("some error")
-
 func TestStreetMarketWriter_Create_Error(t *testing.T) {
 	validInp := domain.StreetMarketCreateInput{
 		Long:          -46548146,
@@ -148,6 +155,104 @@ func TestStreetMarketWriter_Create_Error(t *testing.T) {
 			srv := NewWriter(repoMock, idGenMock)
 
 			_, gErr := srv.Create(context.TODO(), tc.inp)
+
+			if !errors.Is(gErr, tc.wErr) {
+				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
+			}
+		})
+	}
+}
+
+func TestStreetMarketWriter_Edit(t *testing.T) {
+	repoMock := &stubRepositoryWriter{
+		update: func(ctx context.Context, sm domain.StreetMarket) error {
+			return nil
+		},
+	}
+
+	idGenMock := func() string { return "" }
+
+	srv := NewWriter(repoMock, idGenMock)
+
+	id := "07468c29-cd01-414d-adcb-68282eb94d9a"
+	editInp := domain.StreetMarketEditInput{
+		Long:          -46548146,
+		Lat:           -23568390,
+		SectCens:      "355030885000019",
+		Area:          "3550308005040",
+		IDdist:        87,
+		District:      "VILA FORMOSA",
+		IDSubTH:       26,
+		SubTownHall:   "ARICANDUVA",
+		Region5:       "Leste",
+		Region8:       "Leste 1",
+		Name:          "RAPOSO TAVARES",
+		Register:      "1129-0",
+		Street:        "Rua dos Bobos",
+		Number:        500,
+		Neighborhood:  "JARDIM SARAH",
+		AddrExtraInfo: "Loren ipsum",
+	}
+
+	err := srv.Edit(context.TODO(), id, editInp)
+
+	if err != nil {
+		t.Errorf("expect return nil, got %v", err)
+	}
+
+	want := domain.StreetMarket{
+		ID:            id,
+		Long:          editInp.Long,
+		Lat:           editInp.Lat,
+		SectCens:      editInp.SectCens,
+		Area:          editInp.Area,
+		IDdist:        editInp.IDdist,
+		District:      editInp.District,
+		IDSubTH:       editInp.IDSubTH,
+		SubTownHall:   editInp.SubTownHall,
+		Region5:       editInp.Region5,
+		Region8:       editInp.Region8,
+		Name:          editInp.Name,
+		Register:      editInp.Register,
+		Street:        editInp.Street,
+		Number:        editInp.Number,
+		Neighborhood:  editInp.Neighborhood,
+		AddrExtraInfo: editInp.AddrExtraInfo,
+	}
+
+	if diff := cmp.Diff(want, repoMock.updateInp); diff != "" {
+		t.Errorf("unexpected street market when calls edit (-want +got):\n%s", diff)
+	}
+}
+
+func TestStreetMarketWriter_Edit_Error(t *testing.T) {
+	testCases := map[string]struct {
+		rErr error
+		wErr error
+	}{
+		"When entity not exists": {
+			rErr: domain.ErrNothingUpdated,
+			wErr: domain.ErrSMNotFound,
+		},
+		"When a unexpected error occurs in repository": {
+			rErr: errSome,
+			wErr: domain.ErrUnexpected,
+		},
+	}
+
+	for title, tc := range testCases {
+		t.Run(title, func(t *testing.T) {
+			repoMock := &stubRepositoryWriter{
+				update: func(ctx context.Context, sm domain.StreetMarket) error {
+					return tc.rErr
+				},
+			}
+
+			idGenMock := func() string { return "" }
+
+			srv := NewWriter(repoMock, idGenMock)
+
+			gErr := srv.Edit(context.TODO(), "1d35c511-8156-4063-ad15-65fac38e82ce", domain.StreetMarketEditInput{})
 
 			if !errors.Is(gErr, tc.wErr) {
 				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
