@@ -38,7 +38,7 @@ type StreetMarket struct {
 	Name          string
 	Register      string
 	Street        string
-	Number        int
+	Number        string
 	Neighborhood  string
 	AddrExtraInfo string
 }
@@ -57,7 +57,7 @@ type StreetMarketCreateInput struct {
 	Name          string
 	Register      string
 	Street        string
-	Number        int
+	Number        string
 	Neighborhood  string
 	AddrExtraInfo string
 }
@@ -83,20 +83,20 @@ func (i *StreetMarketCreateInput) Validate() error {
 }
 
 type StreetMarketEditInput struct {
-	Long          float64 // LONG
-	Lat           float64 // LAT
-	SectCens      string  // SETCENS
-	Area          string  // AREAP
-	IDdist        int     // CODDIST
-	District      string  // DISTRITO
-	IDSubTH       int     // CODSUBPREF
-	SubTownHall   string  // SUBPREF
-	Region5       string  // REGIAO5
-	Region8       string  // REGIAO8
-	Name          string  // NOME_FEIRA
-	Register      string  // REGISTRO
-	Street        string  // LOGRADOURO
-	Number        int     // NUMERO
-	Neighborhood  string  // BAIRRO
-	AddrExtraInfo string  // REFERENCIA
+	Long          float64
+	Lat           float64
+	SectCens      string
+	Area          string
+	IDdist        int
+	District      string
+	IDSubTH       int
+	SubTownHall   string
+	Region5       string
+	Region8       string
+	Name          string
+	Register      string
+	Street        string
+	Number        string
+	Neighborhood  string
+	AddrExtraInfo string
 }

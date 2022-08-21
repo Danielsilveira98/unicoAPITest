@@ -94,7 +94,7 @@ func TestStreetMarketRepository_Create(t *testing.T) {
 		Name:         "RAPOSO TAVARES",
 		Register:     "1129-0",
 		Street:       "Rua dos Bobos",
-		Number:       500,
+		Number:       "500",
 		Neighborhood: "JARDIM SARAH",
 	}
 
@@ -177,7 +177,7 @@ func TestStreetMarketRepository_List(t *testing.T) {
 		Name:          "RAPOSO TAVARES",
 		Register:      "1129-0",
 		Street:        "Rua dos Bobos",
-		Number:        500,
+		Number:        "500",
 		Neighborhood:  "JARDIM SARAH",
 		AddrExtraInfo: "Loren ipsum",
 	}
@@ -337,7 +337,7 @@ func TestStreetMarketRepository_Update(t *testing.T) {
 		Name:         "RAPOSO TAVARES",
 		Register:     "1129-0",
 		Street:       "Rua dos Bobos",
-		Number:       500,
+		Number:       "500",
 		Neighborhood: "JARDIM SARAH",
 	}
 
