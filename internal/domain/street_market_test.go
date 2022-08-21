@@ -24,3 +24,56 @@ func TestSMID_Validate_Error(t *testing.T) {
 		t.Errorf("want error %v, got %v", ErrInpValidation, err)
 	}
 }
+
+func TestStreetMarketCreateInput_Validate(t *testing.T) {
+	smin := StreetMarketCreateInput{
+		Name:         "Joh",
+		Register:     "22222",
+		Street:       "Street",
+		Neighborhood: "Neighborhood",
+	}
+
+	if err := smin.Validate(); err != nil {
+		t.Errorf("expect return nil, got %v", err)
+	}
+}
+func TestStreetMartketCreateInput_Validate_Error(t *testing.T) {
+	testCases := map[string]struct {
+		wErr error
+		inp  StreetMarketCreateInput
+	}{
+		"When name is empty": {
+			wErr: ErrInpValidation,
+			inp:  StreetMarketCreateInput{},
+		},
+		"When Register is empty": {
+			wErr: ErrInpValidation,
+			inp: StreetMarketCreateInput{
+				Name: "Joh",
+			},
+		},
+		"When Street is empty": {
+			wErr: ErrInpValidation,
+			inp: StreetMarketCreateInput{
+				Name:     "Joh",
+				Register: "22222",
+			},
+		},
+		"When Neighborhood is empty": {
+			wErr: ErrInpValidation,
+			inp: StreetMarketCreateInput{
+				Name:     "Joh",
+				Register: "22222",
+				Street:   "Ali",
+			},
+		},
+	}
+
+	for title, tc := range testCases {
+		t.Run(title, func(t *testing.T) {
+			if gErr := tc.inp.Validate(); !errors.Is(gErr, tc.wErr) {
+				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
+			}
+		})
+	}
+}

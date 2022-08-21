@@ -323,14 +323,6 @@ func TestStreetMarketRepository_List_Error(t *testing.T) {
 			}
 		})
 	}
-
-	t.Run("When scan return error", func(t *testing.T) {
-		// db, mock, err := sqlmock.New()
-		// if err != nil {
-		// 	t.Fatalf("%v", err)
-		// }
-		// defer db.Close()
-	})
 }
 
 func TestStreetMarketRepository_Update(t *testing.T) {
