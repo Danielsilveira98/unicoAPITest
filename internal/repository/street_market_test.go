@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -160,54 +161,177 @@ func TestStreetMarketRepository_Create_Error(t *testing.T) {
 	}
 }
 
-// func TestStreetMarketRepository_Select(t *testing.T) {
-// 	db, mock, err := sqlmock.New()
-// 	if err != nil {
-// 		t.Fatalf("%v", err)
-// 	}
-// 	defer db.Close()
+func TestStreetMarketRepository_List(t *testing.T) {
+	streetMarket := domain.StreetMarket{
+		ID:            "1966d99f-20e8-4e5e-8f68-eb88ca67f95f",
+		Long:          -46548146,
+		Lat:           -23568390,
+		SectCens:      "355030885000019",
+		Area:          "3550308005040",
+		IDdist:        87,
+		District:      "VILA FORMOSA",
+		IDSubTH:       26,
+		SubTownHall:   "ARICANDUVA",
+		Region5:       "Leste",
+		Region8:       "Leste 1",
+		Name:          "RAPOSO TAVARES",
+		Register:      "1129-0",
+		Street:        "Rua dos Bobos",
+		Number:        500,
+		Neighborhood:  "JARDIM SARAH",
+		AddrExtraInfo: "Loren ipsum",
+	}
 
-// 	mock.ExpectExec("")
+	columns := []string{
+		"id",
+		"long",
+		"lat",
+		"sectcens",
+		"area",
+		"iddist",
+		"district",
+		"idsubth",
+		"subtownhall",
+		"region5",
+		"region8",
+		"name",
+		"register",
+		"street",
+		"number",
+		"neighborhood",
+		"addrextrainfo",
+	}
 
-// 	repo := NewStreetMarketRepository(db)
+	t.Run("When use filter and return results", func(t *testing.T) {
+		db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+		defer db.Close()
 
-// 		if err := mock.ExpectationsWereMet(); err != nil {
-// 			t.Errorf("there were unfulfilled expectations: %s", err)
-// 		}
-// }
+		want := []domain.StreetMarket{streetMarket}
 
-// func TestStreetMarketRepository_Select_Error(t *testing.T) {
-// testCases := map[string]struct {
-// 	not bool
-// 	wErr     error
-// 	mErr     error
-// }{
-// 	"": {},
-// }
+		rows := sqlmock.NewRows(columns)
 
-// for title, tc := range testCases {
-// 	t.Run(title, func(t *testing.T) {
-// 		db, mock, err := sqlmock.New()
-// 		if err != nil {
-// 			t.Fatalf("%v", err)
-// 		}
-// 		defer db.Close()
+		for _, sm := range want {
+			rows.AddRow(
+				sm.ID,
+				fmt.Sprintf("%v", sm.Long),
+				fmt.Sprintf("%v", sm.Lat),
+				sm.SectCens,
+				sm.Area,
+				fmt.Sprintf("%v", sm.IDdist),
+				sm.District,
+				fmt.Sprintf("%v", sm.IDSubTH),
+				sm.SubTownHall,
+				sm.Region5,
+				sm.Region8,
+				sm.Name,
+				sm.Register,
+				sm.Street,
+				fmt.Sprintf("%v", sm.Number),
+				sm.Neighborhood,
+				sm.AddrExtraInfo,
+			)
+		}
 
-// 		if tc.not {
-// 			mock.ExpectExec().WithArgs().WillReturnResult(sqlmock.NewResult(1, 0))
-// 		} else {
-// 			mock.ExpectExec().WithArgs().WillReturnError(tc.mErr)
-// 		}
+		inp := domain.StreetMarketFilter{
+			District: "district9",
+			Region5:  "west",
+		}
 
-// 		repo := NewStreetMarketRepository(db)
+		mock.ExpectQuery(
+			"SELECT * FROM street_market WHERE district = $1 AND region5 = $2",
+		).WillReturnRows(rows)
 
-// 		_, gErr := repo.(context.TODO(), )
+		repo := NewStreetMarketRepository(db)
 
-// 		if !errors.Is(gErr, tc.wErr) {
-// 			t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
-// 		}
-// 	})
-// }
+		r, err := repo.List(context.TODO(), inp)
+
+		if err != nil {
+			t.Errorf("expect return nil, got %v", err)
+		}
+
+		if diff := cmp.Diff(want, r); diff != "" {
+			t.Errorf("unexpected street market when calls create (-want +got):\n%s", diff)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("there were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("When don't use filter and return is empty", func(t *testing.T) {
+		db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+		defer db.Close()
+
+		rows := sqlmock.NewRows(columns)
+
+		mock.ExpectQuery(
+			"SELECT * FROM street_market",
+		).WillReturnRows(rows)
+
+		repo := NewStreetMarketRepository(db)
+
+		r, err := repo.List(context.TODO(), domain.StreetMarketFilter{})
+
+		if err != nil {
+			t.Errorf("expect return nil, got %v", err)
+		}
+
+		want := []domain.StreetMarket{}
+		if diff := cmp.Diff(want, r); diff != "" {
+			t.Errorf("unexpected street market when calls create (-want +got):\n%s", diff)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("there were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestStreetMarketRepository_List_Error(t *testing.T) {
+	testCases := map[string]struct {
+		wErr error
+		mErr error
+	}{
+		"When unexpected error occurs": {
+			wErr: domain.ErrUnexpected,
+			mErr: errSome,
+		},
+	}
+
+	for title, tc := range testCases {
+		t.Run(title, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
+			defer db.Close()
+
+			mock.ExpectQuery(".+").WillReturnError(tc.mErr)
+
+			repo := NewStreetMarketRepository(db)
+
+			_, gErr := repo.List(context.TODO(), domain.StreetMarketFilter{})
+
+			if !errors.Is(gErr, tc.wErr) {
+				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
+			}
+		})
+	}
+
+	t.Run("When scan return error", func(t *testing.T) {
+		// db, mock, err := sqlmock.New()
+		// if err != nil {
+		// 	t.Fatalf("%v", err)
+		// }
+		// defer db.Close()
+	})
+}
 
 func TestStreetMarketRepository_Update(t *testing.T) {
 	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
@@ -272,9 +396,9 @@ func TestStreetMarketRepository_Update_Error(t *testing.T) {
 			defer db.Close()
 
 			if tc.updateNothing {
-				mock.ExpectExec(".+").WithArgs().WillReturnResult(sqlmock.NewResult(1, 0))
+				mock.ExpectExec(".+").WillReturnResult(sqlmock.NewResult(1, 0))
 			} else {
-				mock.ExpectExec(".+").WithArgs().WillReturnError(tc.mErr)
+				mock.ExpectExec(".+").WillReturnError(tc.mErr)
 			}
 
 			repo := NewStreetMarketRepository(db)

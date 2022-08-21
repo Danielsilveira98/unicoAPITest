@@ -23,8 +23,54 @@ func NewStreetMarketRepository(db *sql.DB) *StreetMarketRepository {
 func (r *StreetMarketRepository) List(
 	ctx context.Context,
 	query domain.StreetMarketFilter,
-) (*domain.StreetMarket, error) {
-	return nil, nil
+) ([]domain.StreetMarket, error) {
+	bq := "SELECT * FROM street_market"
+
+	cls, vls, args := buildArgs(query)
+
+	where := []string{}
+
+	for i := 0; i < len(cls); i++ {
+		where = append(where, fmt.Sprintf("%s = %s", cls[i], vls[i]))
+	}
+
+	if len(where) > 0 {
+		bq = fmt.Sprintf("%s WHERE %s", bq, strings.Join(where, " AND "))
+	}
+
+	res, err := r.db.QueryContext(ctx, bq, args...)
+	if err != nil {
+		return nil, fmt.Errorf("%w", domain.ErrUnexpected)
+	}
+
+	rrs := []domain.StreetMarket{}
+	for res.Next() {
+		sm := domain.StreetMarket{}
+		if err := res.Scan(
+			&sm.ID,
+			&sm.Long,
+			&sm.Lat,
+			&sm.SectCens,
+			&sm.Area,
+			&sm.IDdist,
+			&sm.District,
+			&sm.IDSubTH,
+			&sm.SubTownHall,
+			&sm.Region5,
+			&sm.Region8,
+			&sm.Name,
+			&sm.Register,
+			&sm.Street,
+			&sm.Number,
+			&sm.Neighborhood,
+			&sm.AddrExtraInfo,
+		); err != nil {
+			return nil, fmt.Errorf("%w", domain.ErrUnexpected)
+		}
+		rrs = append(rrs, sm)
+	}
+
+	return rrs, nil
 }
 
 func (r *StreetMarketRepository) Create(ctx context.Context, streetMarket domain.StreetMarket) error {
