@@ -63,22 +63,6 @@ type StreetMarketCreateInput struct {
 }
 
 func (i *StreetMarketCreateInput) Validate() error {
-	if i.Name == "" {
-		return fmt.Errorf("%w Name is required", ErrInpValidation)
-	}
-
-	if i.Register == "" {
-		return fmt.Errorf("%w Register is required", ErrInpValidation)
-	}
-
-	if i.Street == "" {
-		return fmt.Errorf("%w Street is required", ErrInpValidation)
-	}
-
-	if i.Neighborhood == "" {
-		return fmt.Errorf("%w Neighborhood is required", ErrInpValidation)
-	}
-
 	return nil
 }
 
