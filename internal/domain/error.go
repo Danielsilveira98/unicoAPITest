@@ -10,4 +10,5 @@ var (
 	ErrNothingUpdated      = errors.New("Nothing updated.")
 	ErrSMNotFound          = errors.New("Street Market not found.")
 	ErrNothingDeleted      = errors.New("Nothing deleted.")
+	ErrNothingCreated      = errors.New("Nothing created.")
 )
