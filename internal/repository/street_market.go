@@ -52,6 +52,36 @@ func (r *StreetMarketRepository) Create(ctx context.Context, streetMarket domain
 }
 
 func (r *StreetMarketRepository) Update(ctx context.Context, sm domain.StreetMarket) error {
+	id := sm.ID
+	sm.ID = ""
+
+	cl, vls, args := buildArgs(sm)
+	lArgs := len(cl)
+
+	bq := "UPDATE street_market SET %s WHERE id = $%v"
+
+	set := []string{}
+	for i := 0; i < lArgs; i++ {
+		set = append(set, fmt.Sprintf("%s = %s", cl[i], vls[i]))
+	}
+
+	q := fmt.Sprintf(bq, strings.Join(set, ","), lArgs+1)
+
+	args = append(args, id)
+	qr, err := r.db.ExecContext(ctx, q, args...)
+	if err != nil {
+		return fmt.Errorf("%w", domain.ErrUnexpected)
+	}
+
+	ra, err := qr.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("%w", domain.ErrUnexpected)
+	}
+
+	if ra < 1 {
+		return domain.ErrNothingUpdated
+	}
+
 	return nil
 }
 

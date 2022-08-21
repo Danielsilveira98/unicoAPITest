@@ -12,7 +12,7 @@ import (
 
 var errSome = errors.New("some error")
 
-func TestStreetMarketRepoistory_Delete(t *testing.T) {
+func TestStreetMarketRepository_Delete(t *testing.T) {
 	id := "84713a81-0e31-4c14-a62f-7e1f67bc526d"
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -81,7 +81,7 @@ func TestStreetMarketRepository_Delete_Error(t *testing.T) {
 	}
 }
 
-func TestStreetMarketRepoistory_Create(t *testing.T) {
+func TestStreetMarketRepository_Create(t *testing.T) {
 	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	if err != nil {
 		t.Fatalf("%v", err)
@@ -160,7 +160,7 @@ func TestStreetMarketRepository_Create_Error(t *testing.T) {
 	}
 }
 
-// func TestStreetMarketRepoistory_Select(t *testing.T) {
+// func TestStreetMarketRepository_Select(t *testing.T) {
 // 	db, mock, err := sqlmock.New()
 // 	if err != nil {
 // 		t.Fatalf("%v", err)
@@ -209,54 +209,84 @@ func TestStreetMarketRepository_Create_Error(t *testing.T) {
 // 	})
 // }
 
-// func TestStreetMarketRepoistory_Edit(t *testing.T) {
-// 	db, mock, err := sqlmock.New()
-// 	if err != nil {
-// 		t.Fatalf("%v", err)
-// 	}
-// 	defer db.Close()
+func TestStreetMarketRepository_Update(t *testing.T) {
+	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	defer db.Close()
 
-// 	mock.ExpectExec("")
+	inp := domain.StreetMarket{
+		ID:           "944ec25d-aac4-4c35-8301-6b35e0d7c05f",
+		Name:         "RAPOSO TAVARES",
+		Register:     "1129-0",
+		Street:       "Rua dos Bobos",
+		Number:       500,
+		Neighborhood: "JARDIM SARAH",
+	}
 
-// 	repo := NewStreetMarketRepository(db)
+	mock.ExpectExec(
+		"UPDATE street_market SET name = $1,register = $2,street = $3,number = $4,neighborhood = $5 WHERE id = $6",
+	).WithArgs(
+		inp.Name,
+		inp.Register,
+		inp.Street,
+		inp.Number,
+		inp.Neighborhood,
+		inp.ID,
+	).WillReturnResult(sqlmock.NewResult(1, 1))
 
-// 		if err := mock.ExpectationsWereMet(); err != nil {
-// 			t.Errorf("there were unfulfilled expectations: %s", err)
-// 		}
-// }
+	repo := NewStreetMarketRepository(db)
 
-// func TestStreetMarketRepository_Edit_Error(t *testing.T) {
-// testCases := map[string]struct {
-// 	not bool
-// 	wErr     error
-// 	mErr     error
-// }{
-// 	"": {},
-// }
+	if err := repo.Update(context.TODO(), inp); err != nil {
+		t.Errorf("expect return nil, got %v", err)
+	}
 
-// for title, tc := range testCases {
-// 	t.Run(title, func(t *testing.T) {
-// 		db, mock, err := sqlmock.New()
-// 		if err != nil {
-// 			t.Fatalf("%v", err)
-// 		}
-// 		defer db.Close()
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
 
-// 		if tc.not {
-// 			mock.ExpectExec().WithArgs().WillReturnResult(sqlmock.NewResult(1, 0))
-// 		} else {
-// 			mock.ExpectExec().WithArgs().WillReturnError(tc.mErr)
-// 		}
+func TestStreetMarketRepository_Update_Error(t *testing.T) {
+	testCases := map[string]struct {
+		updateNothing bool
+		wErr          error
+		mErr          error
+	}{
+		"When unexpected error occurs": {
+			wErr: domain.ErrUnexpected,
+			mErr: errSome,
+		},
+		"When create nothing": {
+			updateNothing: true,
+			wErr:          domain.ErrNothingUpdated,
+		},
+	}
 
-// 		repo := NewStreetMarketRepository(db)
+	for title, tc := range testCases {
+		t.Run(title, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
+			defer db.Close()
 
-// 		_, gErr := repo.(context.TODO(), )
+			if tc.updateNothing {
+				mock.ExpectExec(".+").WithArgs().WillReturnResult(sqlmock.NewResult(1, 0))
+			} else {
+				mock.ExpectExec(".+").WithArgs().WillReturnError(tc.mErr)
+			}
 
-// 		if !errors.Is(gErr, tc.wErr) {
-// 			t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
-// 		}
-// 	})
-// }
+			repo := NewStreetMarketRepository(db)
+
+			gErr := repo.Update(context.TODO(), domain.StreetMarket{})
+
+			if !errors.Is(gErr, tc.wErr) {
+				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
+			}
+		})
+	}
+}
 
 func TestStreetMarketRepository_buildArgs(t *testing.T) {
 	inp := struct {
