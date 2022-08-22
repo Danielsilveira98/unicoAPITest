@@ -12,19 +12,19 @@ import (
 
 type stubRepositoryReader struct {
 	getByIDInp domain.StreetMarketFilter
-	list       func(ctx context.Context, query domain.StreetMarketFilter) (*domain.StreetMarket, error)
+	list       func(ctx context.Context, query domain.StreetMarketFilter) ([]domain.StreetMarket, error)
 }
 
 func (s *stubRepositoryReader) List(
 	ctx context.Context,
 	query domain.StreetMarketFilter,
-) (*domain.StreetMarket, error) {
+) ([]domain.StreetMarket, error) {
 	s.getByIDInp = query
 	return s.list(ctx, query)
 }
 
 func TestStreetMarketReader_List(t *testing.T) {
-	want := domain.StreetMarket{
+	want := []domain.StreetMarket{{
 		ID:            uuid.NewString(),
 		Long:          -46548146,
 		Lat:           -23568390,
@@ -42,26 +42,26 @@ func TestStreetMarketReader_List(t *testing.T) {
 		Number:        "500",
 		Neighborhood:  "JARDIM SARAH",
 		AddrExtraInfo: "Loren ipsum",
-	}
+	}}
 
 	repoMock := &stubRepositoryReader{
-		list: func(ctx context.Context, query domain.StreetMarketFilter) (*domain.StreetMarket, error) {
-			return &want, nil
+		list: func(ctx context.Context, query domain.StreetMarketFilter) ([]domain.StreetMarket, error) {
+			return want, nil
 		},
 	}
 
 	srv := NewReader(repoMock)
 
 	wInp := domain.StreetMarketFilter{
-		District:     want.District,
-		Region5:      want.Region5,
-		Name:         want.Name,
-		Neighborhood: want.Neighborhood,
+		District:     want[0].District,
+		Region5:      want[0].Region5,
+		Name:         want[0].Name,
+		Neighborhood: want[0].Neighborhood,
 	}
 
 	got, _ := srv.List(context.TODO(), wInp)
 
-	if diff := cmp.Diff(&want, got); diff != "" {
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("unexpected return (-want +got):\n%s", diff)
 	}
 
@@ -75,21 +75,19 @@ func TestStreetMarketReader_List_Error(t *testing.T) {
 		wErr error
 		inp  domain.StreetMarketFilter
 		rErr error
-		rRtn *domain.StreetMarket
 	}{
 		"When a unexpected error occurs in reader repository": {
 			wErr: domain.ErrUnexpected,
 			inp:  domain.StreetMarketFilter{},
 			rErr: errSome,
-			rRtn: nil,
 		},
 	}
 
 	for title, tc := range testCases {
 		t.Run(title, func(t *testing.T) {
 			repoMock := &stubRepositoryReader{
-				list: func(ctx context.Context, query domain.StreetMarketFilter) (*domain.StreetMarket, error) {
-					return tc.rRtn, tc.rErr
+				list: func(ctx context.Context, query domain.StreetMarketFilter) ([]domain.StreetMarket, error) {
+					return nil, tc.rErr
 				},
 			}
 

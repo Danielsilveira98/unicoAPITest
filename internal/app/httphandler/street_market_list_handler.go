@@ -17,7 +17,7 @@ type StreetMarketListHandler struct {
 	getter streetMarketLister
 }
 
-func NewStreetMarketHandler(getter streetMarketLister) *StreetMarketListHandler {
+func NewStreetMarketListHandler(getter streetMarketLister) *StreetMarketListHandler {
 	return &StreetMarketListHandler{getter}
 }
 

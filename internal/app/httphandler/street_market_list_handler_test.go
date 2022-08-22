@@ -85,7 +85,7 @@ func TestStreetMarketListHandler_Handle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h := NewStreetMarketHandler(listerMock)
+	h := NewStreetMarketListHandler(listerMock)
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(h.Handle)
 	handler.ServeHTTP(rr, req)
@@ -135,7 +135,7 @@ func TestStreetMarketListHandler_Handle_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			h := NewStreetMarketHandler(listerMock)
+			h := NewStreetMarketListHandler(listerMock)
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(h.Handle)
 			handler.ServeHTTP(rr, req)
