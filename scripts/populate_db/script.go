@@ -94,7 +94,10 @@ func processFile(path string) ([]domain.StreetMarketCreateInput, error) {
 		return nil, err
 	}
 
-	csvLines, err := csv.NewReader(csvFile).ReadAll()
+	reader := csv.NewReader(csvFile)
+	reader.LazyQuotes = true
+
+	csvLines, err := reader.ReadAll()
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +106,7 @@ func processFile(path string) ([]domain.StreetMarketCreateInput, error) {
 	sms := []domain.StreetMarketCreateInput{}
 
 	for _, line := range csvLines {
-		if len(line) > 0 {
+		if len(line) > 1 {
 			var long, lat float64
 			var iddist, idSubTH int
 

@@ -13,8 +13,5 @@ updb:
 stopdb:
 	docker-compose stop postgres
 
-downdb:
-	docker-compose down postgres
-
 loadfiles:
 	MIGRATIONS_PATH=deployment/migrations DATA_PATH=scripts/populate_db/data/ go run ./scripts/populate_db/script.go > log/populate_db.log
