@@ -59,7 +59,6 @@ func main() {
 	for _, file := range files {
 		fmt.Printf("Processing file %s\n", file.Name())
 		sms, err := processFile(fmt.Sprintf("%s/%s", dataPath, file.Name()))
-		// _, err = processFile(fmt.Sprintf("%s/DEINFO_AB_FEIRASLIVRES_2004.csv", dataPath))
 		if err != nil {
 			fmt.Printf("Error processing file %s. Err: %v\n", file.Name(), err)
 			continue
@@ -79,7 +78,7 @@ func main() {
 func processFile(path string) ([]domain.StreetMarketCreateInput, error) {
 	csvFile, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w", err)
 	}
 	fmt.Println("Successfully Opened CSV file")
 	defer csvFile.Close()
@@ -87,11 +86,11 @@ func processFile(path string) ([]domain.StreetMarketCreateInput, error) {
 	// Skip first row (line)
 	row1, err := bufio.NewReader(csvFile).ReadSlice('\n')
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w", err)
 	}
 	_, err = csvFile.Seek(int64(len(row1)), io.SeekStart)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w", err)
 	}
 
 	reader := csv.NewReader(csvFile)
@@ -99,60 +98,60 @@ func processFile(path string) ([]domain.StreetMarketCreateInput, error) {
 
 	csvLines, err := reader.ReadAll()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w", err)
 	}
 	fmt.Println("Successfully Read CSV file")
 
 	sms := []domain.StreetMarketCreateInput{}
 
 	for _, line := range csvLines {
-		if len(line) > 1 {
-			var long, lat float64
-			var iddist, idSubTH int
-
-			if long, err = strconv.ParseFloat(line[1], 32); line[1] != "" && err != nil {
-				fmt.Printf("long : %s \n", line[1])
-				fmt.Println(err)
-				return nil, err
-			}
-			if lat, err = strconv.ParseFloat(line[2], 32); line[2] != "" && err != nil {
-				fmt.Printf("lat : %s \n", line[2])
-				fmt.Println(err)
-				return nil, err
-			}
-			if iddist, err = strconv.Atoi(line[5]); line[5] != "" && err != nil {
-				fmt.Printf("iddist : %s \n", line[5])
-				fmt.Println(err)
-				return nil, err
-			}
-			if idSubTH, err = strconv.Atoi(line[7]); line[7] != "" && err != nil {
-				fmt.Printf("idSubTH : %s \n", line[7])
-				fmt.Println(err)
-				return nil, err
-			}
-
-			sm := domain.StreetMarketCreateInput{
-				Long:          long,
-				Lat:           lat,
-				SectCens:      line[3],
-				Area:          line[4],
-				IDdist:        iddist,
-				District:      line[6],
-				IDSubTH:       idSubTH,
-				SubTownHall:   line[8],
-				Region5:       line[9],
-				Region8:       line[10],
-				Name:          line[11],
-				Register:      line[12],
-				Street:        line[13],
-				Number:        line[14],
-				Neighborhood:  line[15],
-				AddrExtraInfo: line[16],
-			}
-			sms = append(sms, sm)
-		} else {
-			fmt.Println("empty line")
+		if len(line) <= 1 {
+			continue
 		}
+
+		var long, lat float64
+		var iddist, idSubTH int
+
+		if long, err = strconv.ParseFloat(line[1], 32); line[1] != "" && err != nil {
+			fmt.Printf("long : %s \n", line[1])
+			fmt.Println(err)
+			return nil, fmt.Errorf("%w", err)
+		}
+		if lat, err = strconv.ParseFloat(line[2], 32); line[2] != "" && err != nil {
+			fmt.Printf("lat : %s \n", line[2])
+			fmt.Println(err)
+			return nil, fmt.Errorf("%w", err)
+		}
+		if iddist, err = strconv.Atoi(line[5]); line[5] != "" && err != nil {
+			fmt.Printf("iddist : %s \n", line[5])
+			fmt.Println(err)
+			return nil, fmt.Errorf("%w", err)
+		}
+		if idSubTH, err = strconv.Atoi(line[7]); line[7] != "" && err != nil {
+			fmt.Printf("idSubTH : %s \n", line[7])
+			fmt.Println(err)
+			return nil, fmt.Errorf("%w", err)
+		}
+
+		sm := domain.StreetMarketCreateInput{
+			Long:          long,
+			Lat:           lat,
+			SectCens:      line[3],
+			Area:          line[4],
+			IDdist:        iddist,
+			District:      line[6],
+			IDSubTH:       idSubTH,
+			SubTownHall:   line[8],
+			Region5:       line[9],
+			Region8:       line[10],
+			Name:          line[11],
+			Register:      line[12],
+			Street:        line[13],
+			Number:        line[14],
+			Neighborhood:  line[15],
+			AddrExtraInfo: line[16],
+		}
+		sms = append(sms, sm)
 	}
 
 	return sms, nil
