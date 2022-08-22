@@ -1,3 +1,7 @@
+#!make
+include .env
+export $(shell sed 's/=.*//' .env)
+
 setup:
 	go mod download
 
@@ -8,13 +12,13 @@ lint:
 	golangci-lint run ./...
 
 updb:
-	docker-compose up -d postgres && docker-compose logs -f postgres
+	POSTGRES_USER=${POSTGRES_USER} POSTGRES_PASSWORD=${POSTGRES_PASSWORD} docker-compose up -d postgres && docker-compose logs -f postgres
 
 stopdb:
 	docker-compose stop postgres
 
 loadfiles:
-	MIGRATIONS_PATH=deployment/migrations DATA_PATH=scripts/populate_db/data/ go run ./scripts/populate_db/script.go > log/populate_db.log
+	go run ./scripts/populate_db/script.go > log/populate_db.log
 
 run:
-	go run cmd/main.go
+	go run cmd/api/main.go
