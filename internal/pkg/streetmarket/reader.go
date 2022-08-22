@@ -27,11 +27,11 @@ func (s *StreetMarketReader) List(
 
 	pc := domain.Pagination{}
 	pc.Limit = perPage
-	if page > 2 {
-		pc.Offset = 1
-	} else {
-		pc.Offset = (page-1)*perPage + 1
+	if page == 0 {
+		page = 1
 	}
+
+	pc.Offset = (page-1)*perPage + 1
 
 	filter := domain.StreetMarketFilter{
 		District:     query.District,
