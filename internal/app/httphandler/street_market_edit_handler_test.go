@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,21 +12,25 @@ import (
 
 	"github.com/Danielsilveira98/unicoAPITest/internal/domain"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
-type stubStreetMarketCreator struct {
-	createInp domain.StreetMarketCreateInput
-	create    func(context.Context, domain.StreetMarketCreateInput) (string, error)
+type stubStreetMarketEditor struct {
+	editIDInp domain.SMID
+	editInp   domain.StreetMarketEditInput
+	edit      func(context.Context, domain.SMID, domain.StreetMarketEditInput) error
 }
 
-func (s *stubStreetMarketCreator) Create(ctx context.Context, inp domain.StreetMarketCreateInput) (string, error) {
-	s.createInp = inp
-	return s.create(ctx, inp)
+func (s *stubStreetMarketEditor) Edit(ctx context.Context, ID domain.SMID, inp domain.StreetMarketEditInput) error {
+	s.editInp = inp
+	s.editIDInp = ID
+	return s.edit(ctx, ID, inp)
 }
 
-func TestStreetMarketCreateHandler_Handle(t *testing.T) {
-	id := "12d54a54-bbd7-4e70-8c3c-7e8e424d8ebf"
-	wantInp := domain.StreetMarketCreateInput{
+func TestStreetMarketEditHandler_Handle(t *testing.T) {
+	id := "aaa1be24-ddec-4590-839d-b7ae54b9ed78"
+	wantInp := domain.StreetMarketEditInput{
 		Long:          -46548146,
 		Lat:           -23568390,
 		SectCens:      "355030885000019",
@@ -62,9 +67,9 @@ func TestStreetMarketCreateHandler_Handle(t *testing.T) {
 		wantInp.AddrExtraInfo,
 	}
 
-	creatorMock := &stubStreetMarketCreator{
-		create: func(ctx context.Context, pci domain.StreetMarketCreateInput) (string, error) {
-			return id, nil
+	editorMock := &stubStreetMarketEditor{
+		edit: func(ctx context.Context, ID domain.SMID, inp domain.StreetMarketEditInput) error {
+			return nil
 		},
 	}
 
@@ -73,35 +78,46 @@ func TestStreetMarketCreateHandler_Handle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, "/street_market", &body)
+	path := fmt.Sprintf("/street_market/%s", id)
+	req, err := http.NewRequest(http.MethodPatch, path, &body)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	h := NewStreetMarketCreateHandler(creatorMock)
+	h := NewStreetMarketEditHandler(editorMock)
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(h.Handle)
-	handler.ServeHTTP(rr, req)
+	r := mux.NewRouter()
+	r.HandleFunc("/street_market/{street-market-id}", h.Handle)
+	r.ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusCreated {
-		t.Errorf("expect status code %v, got %v", http.StatusCreated, status)
+	if status := rr.Code; status != http.StatusNoContent {
+		t.Errorf("expect status code %v, got %v", http.StatusNoContent, status)
 	}
 
-	if diff := cmp.Diff(wantInp, creatorMock.createInp); diff != "" {
-		t.Errorf("street market creator create receive a unexpected input (-want +got):\n%s", diff)
+	if diff := cmp.Diff(wantInp, editorMock.editInp); diff != "" {
+		t.Errorf("street market editor edit receive a unexpected input (-want +got):\n%s", diff)
 	}
 }
 
-func TestStreetMarketCreateHandler_Handle_Error(t *testing.T) {
+func TestStreetMarketEditHandler_Handle_Error(t *testing.T) {
 	testCases := map[string]struct {
 		rBody        streetMarketBody
-		creatorErr   error
+		id           string
+		editorErr    error
 		wantStatusCd int
 		wantBody     ErrorResponse
 	}{
+		"Invalid id": {
+			rBody:        streetMarketBody{},
+			id:           "invalid",
+			editorErr:    domain.ErrInpValidation,
+			wantStatusCd: http.StatusBadRequest,
+			wantBody:     ErrorResponse{"error": domain.ErrInpValidation.Error()},
+		},
 		"Unexpected error": {
 			rBody:        streetMarketBody{},
-			creatorErr:   domain.ErrUnexpected,
+			id:           "70ec02cb-0e4a-44cc-b0f7-83c040cb83ea",
+			editorErr:    domain.ErrUnexpected,
 			wantStatusCd: http.StatusInternalServerError,
 			wantBody:     ErrorResponse{"error": domain.ErrUnexpected.Error()},
 		},
@@ -109,9 +125,9 @@ func TestStreetMarketCreateHandler_Handle_Error(t *testing.T) {
 
 	for title, tc := range testCases {
 		t.Run(title, func(t *testing.T) {
-			creatorMock := &stubStreetMarketCreator{
-				create: func(ctx context.Context, pci domain.StreetMarketCreateInput) (string, error) {
-					return "", tc.creatorErr
+			editorMock := &stubStreetMarketEditor{
+				edit: func(ctx context.Context, id domain.SMID, inp domain.StreetMarketEditInput) error {
+					return tc.editorErr
 				},
 			}
 
@@ -120,15 +136,17 @@ func TestStreetMarketCreateHandler_Handle_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			req, err := http.NewRequest(http.MethodPost, "/street_market", &body)
+			path := fmt.Sprintf("/street_market/%s", tc.id)
+			req, err := http.NewRequest(http.MethodPatch, path, &body)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			h := NewStreetMarketCreateHandler(creatorMock)
+			h := NewStreetMarketEditHandler(editorMock)
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(h.Handle)
-			handler.ServeHTTP(rr, req)
+			r := mux.NewRouter()
+			r.HandleFunc("/street_market/{street-market-id}", h.Handle)
+			r.ServeHTTP(rr, req)
 
 			if status := rr.Code; status != tc.wantStatusCd {
 				t.Errorf("expect status code %v, got %v", tc.wantStatusCd, status)
@@ -147,15 +165,18 @@ func TestStreetMarketCreateHandler_Handle_Error(t *testing.T) {
 	}
 
 	t.Run("malformed body", func(t *testing.T) {
-		req, err := http.NewRequest(http.MethodPost, "/street_market", strings.NewReader("body"))
+		id := uuid.NewString()
+		path := fmt.Sprintf("/street_market/%s", id)
+		req, err := http.NewRequest(http.MethodPatch, path, strings.NewReader("body"))
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		h := NewStreetMarketCreateHandler(&stubStreetMarketCreator{})
+		h := NewStreetMarketEditHandler(&stubStreetMarketEditor{})
 		rr := httptest.NewRecorder()
-		handler := http.HandlerFunc(h.Handle)
-		handler.ServeHTTP(rr, req)
+		r := mux.NewRouter()
+		r.HandleFunc("/street_market/{street-market-id}", h.Handle)
+		r.ServeHTTP(rr, req)
 
 		if status := rr.Code; status != http.StatusBadRequest {
 			t.Errorf("expect status code %v, got %v", status, http.StatusBadRequest)

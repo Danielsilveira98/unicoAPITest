@@ -8,23 +8,22 @@ import (
 	"net/http"
 
 	"github.com/Danielsilveira98/unicoAPITest/internal/domain"
+	"github.com/gorilla/mux"
 )
 
-type streetMarketCreator interface {
-	Create(context.Context,
-		domain.StreetMarketCreateInput) (string,
-		error)
+type streetMarketEditor interface {
+	Edit(ctx context.Context, ID domain.SMID, inp domain.StreetMarketEditInput) error
 }
 
-type StreetMarketCreateHandler struct {
-	creator streetMarketCreator
+type StreetMarketEditHandler struct {
+	editor streetMarketEditor
 }
 
-func NewStreetMarketCreateHandler(creator streetMarketCreator) *StreetMarketCreateHandler {
-	return &StreetMarketCreateHandler{creator}
+func NewStreetMarketEditHandler(editor streetMarketEditor) *StreetMarketEditHandler {
+	return &StreetMarketEditHandler{editor}
 }
 
-func (h *StreetMarketCreateHandler) Handle(w http.ResponseWriter, r *http.Request) {
+func (h *StreetMarketEditHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	var body streetMarketBody
 
 	bb, err := ioutil.ReadAll(r.Body)
@@ -35,11 +34,15 @@ func (h *StreetMarketCreateHandler) Handle(w http.ResponseWriter, r *http.Reques
 	defer r.Body.Close()
 
 	if err := json.Unmarshal(bb, &body); err != nil {
+		fmt.Errorf("%v\n", err)
 		respondError(w, http.StatusBadRequest, "malformed body")
 		return
 	}
 
-	input := domain.StreetMarketCreateInput{
+	vars := mux.Vars(r)
+	id := domain.SMID(vars["street-market-id"])
+
+	input := domain.StreetMarketEditInput{
 		Long:          body.Long,
 		Lat:           body.Lat,
 		SectCens:      body.SectCens,
@@ -58,7 +61,7 @@ func (h *StreetMarketCreateHandler) Handle(w http.ResponseWriter, r *http.Reques
 		AddrExtraInfo: body.AddrExtraInfo,
 	}
 
-	id, err := h.creator.Create(r.Context(), input)
+	err = h.editor.Edit(r.Context(), id, input)
 
 	if err != nil {
 		fmt.Printf("%v", err)
@@ -75,7 +78,5 @@ func (h *StreetMarketCreateHandler) Handle(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	location := fmt.Sprintf("%s/street_market/%s", r.Host, id)
-	w.Header().Add("Location", location)
-	respondJSON(w, http.StatusCreated, "")
+	respondJSON(w, http.StatusNoContent, "")
 }
