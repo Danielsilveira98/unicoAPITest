@@ -17,7 +17,8 @@ create table if not exists street_market (
   street VARCHAR(50),
   number VARCHAR(50),
   neighborhood VARCHAR(50),
-  addrextrainfo VARCHAR(250)
+  addrextrainfo VARCHAR(250),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- +goose StatementEnd

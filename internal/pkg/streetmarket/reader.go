@@ -7,7 +7,7 @@ import (
 )
 
 type repositoryReader interface {
-	List(ctx context.Context, query domain.StreetMarketFilter) ([]domain.StreetMarket, error)
+	List(context.Context, domain.Pagination, domain.StreetMarketFilter) ([]domain.StreetMarket, error)
 }
 
 type StreetMarketReader struct {
@@ -18,7 +18,21 @@ func NewReader(repo repositoryReader) *StreetMarketReader {
 	return &StreetMarketReader{repo}
 }
 
-func (s *StreetMarketReader) List(ctx context.Context, query domain.StreetMarketFilter) ([]domain.StreetMarket, error) {
+func (s *StreetMarketReader) List(
+	ctx context.Context,
+	page int,
+	query domain.StreetMarketFilter,
+) ([]domain.StreetMarket, error) {
+	const perPage = 100
+
+	pc := domain.Pagination{}
+	pc.Limit = perPage
+	if page > 2 {
+		pc.Offset = 1
+	} else {
+		pc.Offset = (page-1)*perPage + 1
+	}
+
 	filter := domain.StreetMarketFilter{
 		District:     query.District,
 		Region5:      query.Region5,
@@ -26,7 +40,7 @@ func (s *StreetMarketReader) List(ctx context.Context, query domain.StreetMarket
 		Neighborhood: query.Neighborhood,
 	}
 
-	ls, err := s.repo.List(ctx, filter)
+	ls, err := s.repo.List(ctx, pc, filter)
 	if err != nil {
 		return nil, domain.ErrUnexpected
 	}

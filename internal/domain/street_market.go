@@ -80,3 +80,8 @@ type StreetMarketEditInput struct {
 	Neighborhood  string
 	AddrExtraInfo string
 }
+
+type Pagination struct {
+	Offset int
+	Limit  int
+}

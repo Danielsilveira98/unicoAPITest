@@ -11,16 +11,19 @@ import (
 )
 
 type stubRepositoryReader struct {
-	getByIDInp domain.StreetMarketFilter
-	list       func(ctx context.Context, query domain.StreetMarketFilter) ([]domain.StreetMarket, error)
+	listFInp  domain.StreetMarketFilter
+	listPCInp domain.Pagination
+	list      func(context.Context, domain.Pagination, domain.StreetMarketFilter) ([]domain.StreetMarket, error)
 }
 
 func (s *stubRepositoryReader) List(
 	ctx context.Context,
+	pc domain.Pagination,
 	query domain.StreetMarketFilter,
 ) ([]domain.StreetMarket, error) {
-	s.getByIDInp = query
-	return s.list(ctx, query)
+	s.listFInp = query
+	s.listPCInp = pc
+	return s.list(ctx, pc, query)
 }
 
 func TestStreetMarketReader_List(t *testing.T) {
@@ -45,7 +48,7 @@ func TestStreetMarketReader_List(t *testing.T) {
 	}}
 
 	repoMock := &stubRepositoryReader{
-		list: func(ctx context.Context, query domain.StreetMarketFilter) ([]domain.StreetMarket, error) {
+		list: func(ctx context.Context, pc domain.Pagination, query domain.StreetMarketFilter) ([]domain.StreetMarket, error) {
 			return want, nil
 		},
 	}
@@ -59,15 +62,66 @@ func TestStreetMarketReader_List(t *testing.T) {
 		Neighborhood: want[0].Neighborhood,
 	}
 
-	got, _ := srv.List(context.TODO(), wInp)
+	t.Run("When page is 0", func(t *testing.T) {
+		got, _ := srv.List(context.TODO(), 0, wInp)
 
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("unexpected return (-want +got):\n%s", diff)
-	}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("unexpected return (-want +got):\n%s", diff)
+		}
 
-	if diff := cmp.Diff(wInp, repoMock.getByIDInp); diff != "" {
-		t.Errorf("unexpected filter when calls getByID (-want +got):\n%s", diff)
-	}
+		if diff := cmp.Diff(wInp, repoMock.listFInp); diff != "" {
+			t.Errorf("unexpected filter when calls list (-want +got):\n%s", diff)
+		}
+
+		wPc := domain.Pagination{
+			Offset: 1,
+			Limit:  100,
+		}
+		if diff := cmp.Diff(wPc, repoMock.listPCInp); diff != "" {
+			t.Errorf("unexpected page chain when calls list (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("When page is 1", func(t *testing.T) {
+		got, _ := srv.List(context.TODO(), 1, wInp)
+
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("unexpected return (-want +got):\n%s", diff)
+		}
+
+		if diff := cmp.Diff(wInp, repoMock.listFInp); diff != "" {
+			t.Errorf("unexpected filter when calls list (-want +got):\n%s", diff)
+		}
+
+		wPc := domain.Pagination{
+			Offset: 1,
+			Limit:  100,
+		}
+		if diff := cmp.Diff(wPc, repoMock.listPCInp); diff != "" {
+			t.Errorf("unexpected page chain when calls list (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("When page is less than 2", func(t *testing.T) {
+		page := 2
+		wPc := domain.Pagination{
+			Offset: 101,
+			Limit:  100,
+		}
+
+		got, _ := srv.List(context.TODO(), page, wInp)
+
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("unexpected return (-want +got):\n%s", diff)
+		}
+
+		if diff := cmp.Diff(wInp, repoMock.listFInp); diff != "" {
+			t.Errorf("unexpected filter when calls list (-want +got):\n%s", diff)
+		}
+		if diff := cmp.Diff(wPc, repoMock.listPCInp); diff != "" {
+			t.Errorf("unexpected page chain when calls list (-want +got):\n%s", diff)
+		}
+	})
 }
 
 func TestStreetMarketReader_List_Error(t *testing.T) {
@@ -86,14 +140,14 @@ func TestStreetMarketReader_List_Error(t *testing.T) {
 	for title, tc := range testCases {
 		t.Run(title, func(t *testing.T) {
 			repoMock := &stubRepositoryReader{
-				list: func(ctx context.Context, query domain.StreetMarketFilter) ([]domain.StreetMarket, error) {
+				list: func(ctx context.Context, pc domain.Pagination, query domain.StreetMarketFilter) ([]domain.StreetMarket, error) {
 					return nil, tc.rErr
 				},
 			}
 
 			srv := NewReader(repoMock)
 
-			_, gErr := srv.List(context.TODO(), tc.inp)
+			_, gErr := srv.List(context.TODO(), 0, tc.inp)
 
 			if !errors.Is(gErr, tc.wErr) {
 				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
