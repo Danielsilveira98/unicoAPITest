@@ -47,8 +47,6 @@ func (s *StreetMarketWriter) Create(ctx context.Context, inp domain.StreetMarket
 	err := s.repo.Create(ctx, sm)
 	if err != nil {
 		switch err {
-		case domain.ErrForeignKeyNotExists:
-			return "", domain.ErrOrgCalNotFound
 		default:
 			return "", domain.ErrUnexpected
 		}

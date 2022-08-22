@@ -122,12 +122,6 @@ func TestStreetMarketWriter_Create_Error(t *testing.T) {
 		inp   domain.StreetMarketCreateInput
 		wErr  error
 	}{
-		"When organization calendar not exists": {
-			wErr:  domain.ErrOrgCalNotFound,
-			rErr:  domain.ErrForeignKeyNotExists,
-			IDGen: "f2c69026-8d93-4402-8854-fec51b06e1bb",
-			inp:   validInp,
-		},
 		"When unexpected erro occurs in writer repository": {
 			wErr:  domain.ErrUnexpected,
 			rErr:  errSome,
