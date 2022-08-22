@@ -120,7 +120,7 @@ func TestStreetMarketCreateHandler_Handle_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			req, err := http.NewRequest("POST", "/street_market", &body)
+			req, err := http.NewRequest(http.MethodPost, "/street_market", &body)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -147,7 +147,7 @@ func TestStreetMarketCreateHandler_Handle_Error(t *testing.T) {
 	}
 
 	t.Run("malformed body", func(t *testing.T) {
-		req, err := http.NewRequest("POST", "/street_market", strings.NewReader("body"))
+		req, err := http.NewRequest(http.MethodPost, "/street_market", strings.NewReader("body"))
 		if err != nil {
 			t.Fatal(err)
 		}
