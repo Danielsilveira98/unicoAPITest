@@ -12,8 +12,8 @@ import (
 	"strconv"
 
 	"github.com/Danielsilveira98/unicoAPITest/internal/domain"
+	"github.com/Danielsilveira98/unicoAPITest/internal/pkg/repository"
 	"github.com/Danielsilveira98/unicoAPITest/internal/pkg/streetmarket"
-	"github.com/Danielsilveira98/unicoAPITest/internal/repository"
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
