@@ -46,3 +46,23 @@ type streetMarketBody struct {
 	Neighborhood  string  `json:"bairro"`
 	AddrExtraInfo string  `json:"referencia"`
 }
+
+type streetMarketResponse struct {
+	ID            string  `json:"id,omitempty"`
+	Long          float64 `json:"long,omitempty"`
+	Lat           float64 `json:"lat,omitempty"`
+	SectCens      string  `json:"setcens,omitempty"`
+	Area          string  `json:"areap,omitempty"`
+	IDdist        int     `json:"coddist,omitempty"`
+	District      string  `json:"distrito,omitempty"`
+	IDSubTH       int     `json:"codsubpref,omitempty"`
+	SubTownHall   string  `json:"subpref,omitempty"`
+	Region5       string  `json:"regiao5,omitempty"`
+	Region8       string  `json:"regiao8,omitempty"`
+	Name          string  `json:"nome_feira,omitempty"`
+	Register      string  `json:"registro,omitempty"`
+	Street        string  `json:"logradouro,omitempty"`
+	Number        string  `json:"numero,omitempty"`
+	Neighborhood  string  `json:"bairro,omitempty"`
+	AddrExtraInfo string  `json:"referencia,omitempty"`
+}

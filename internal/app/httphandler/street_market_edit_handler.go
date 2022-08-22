@@ -34,7 +34,6 @@ func (h *StreetMarketEditHandler) Handle(w http.ResponseWriter, r *http.Request)
 	defer r.Body.Close()
 
 	if err := json.Unmarshal(bb, &body); err != nil {
-		fmt.Errorf("%v\n", err)
 		respondError(w, http.StatusBadRequest, "malformed body")
 		return
 	}
