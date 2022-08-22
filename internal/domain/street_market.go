@@ -62,10 +62,6 @@ type StreetMarketCreateInput struct {
 	AddrExtraInfo string
 }
 
-func (i *StreetMarketCreateInput) Validate() error {
-	return nil
-}
-
 type StreetMarketEditInput struct {
 	Long          float64
 	Lat           float64

@@ -122,11 +122,6 @@ func TestStreetMarketWriter_Create_Error(t *testing.T) {
 		inp   domain.StreetMarketCreateInput
 		wErr  error
 	}{
-		"When input is invalid": {
-			wErr:  domain.ErrInpValidation,
-			IDGen: "d00443e8-160d-4099-8a93-442a183be369",
-			inp:   domain.StreetMarketCreateInput{},
-		},
 		"When organization calendar not exists": {
 			wErr:  domain.ErrOrgCalNotFound,
 			rErr:  domain.ErrForeignKeyNotExists,

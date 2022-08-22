@@ -24,10 +24,6 @@ func NewWriter(repo repositoryWriter, idGen uuidGenerator) *StreetMarketWriter {
 }
 
 func (s *StreetMarketWriter) Create(ctx context.Context, inp domain.StreetMarketCreateInput) (string, error) {
-	if err := inp.Validate(); err != nil {
-		return "", fmt.Errorf("%w", err)
-	}
-
 	sm := domain.StreetMarket{
 		ID:            s.idGen(),
 		Long:          inp.Long,
