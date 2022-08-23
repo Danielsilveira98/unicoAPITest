@@ -22,3 +22,7 @@ loadfiles:
 
 run:
 	go run cmd/api/main.go
+
+
+getall:
+	curl http://localhost:8000/street_market

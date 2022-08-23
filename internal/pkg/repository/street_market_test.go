@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/Danielsilveira98/unicoAPITest/internal/domain"
@@ -168,9 +169,9 @@ func TestStreetMarketRepository_List(t *testing.T) {
 		Lat:           -23568390,
 		SectCens:      "355030885000019",
 		Area:          "3550308005040",
-		IDdist:        87,
+		IDdist:        "87",
 		District:      "VILA FORMOSA",
-		IDSubTH:       26,
+		IDSubTH:       "26",
 		SubTownHall:   "ARICANDUVA",
 		Region5:       "Leste",
 		Region8:       "Leste 1",
@@ -180,6 +181,7 @@ func TestStreetMarketRepository_List(t *testing.T) {
 		Number:        "500",
 		Neighborhood:  "JARDIM SARAH",
 		AddrExtraInfo: "Loren ipsum",
+		CreatedAt:     &time.Time{},
 	}
 
 	columns := []string{
@@ -200,6 +202,7 @@ func TestStreetMarketRepository_List(t *testing.T) {
 		"number",
 		"neighborhood",
 		"addrextrainfo",
+		"createdat",
 	}
 
 	t.Run("When use filter and return results", func(t *testing.T) {
@@ -232,21 +235,28 @@ func TestStreetMarketRepository_List(t *testing.T) {
 				fmt.Sprintf("%v", sm.Number),
 				sm.Neighborhood,
 				sm.AddrExtraInfo,
+				sm.CreatedAt,
 			)
 		}
 
+		pg := domain.Pagination{
+			Offset: 101,
+			Limit:  100,
+		}
 		inp := domain.StreetMarketFilter{
 			District: "district9",
 			Region5:  "west",
 		}
 
-		mock.ExpectQuery(
-			"SELECT * FROM street_market WHERE district = $1 AND region5 = $2",
-		).WillReturnRows(rows)
+		wQB := "SELECT * FROM street_market WHERE district = $1 AND region5 = $2 ORDER BY createdat DESC OFFSET %v LIMIT %v"
+
+		wQ := fmt.Sprintf(wQB, pg.Offset, pg.Limit)
+
+		mock.ExpectQuery(wQ).WillReturnRows(rows)
 
 		repo := NewStreetMarketRepository(db)
 
-		r, err := repo.List(context.TODO(), inp)
+		r, err := repo.List(context.TODO(), pg, inp)
 
 		if err != nil {
 			t.Errorf("expect return nil, got %v", err)
@@ -270,13 +280,18 @@ func TestStreetMarketRepository_List(t *testing.T) {
 
 		rows := sqlmock.NewRows(columns)
 
-		mock.ExpectQuery(
-			"SELECT * FROM street_market",
-		).WillReturnRows(rows)
+		pg := domain.Pagination{
+			Offset: 101,
+			Limit:  100,
+		}
+		wQB := "SELECT * FROM street_market ORDER BY createdat DESC OFFSET %v LIMIT %v"
+
+		wQ := fmt.Sprintf(wQB, pg.Offset, pg.Limit)
+		mock.ExpectQuery(wQ).WillReturnRows(rows)
 
 		repo := NewStreetMarketRepository(db)
 
-		r, err := repo.List(context.TODO(), domain.StreetMarketFilter{})
+		r, err := repo.List(context.TODO(), pg, domain.StreetMarketFilter{})
 
 		if err != nil {
 			t.Errorf("expect return nil, got %v", err)
@@ -316,7 +331,7 @@ func TestStreetMarketRepository_List_Error(t *testing.T) {
 
 			repo := NewStreetMarketRepository(db)
 
-			_, gErr := repo.List(context.TODO(), domain.StreetMarketFilter{})
+			_, gErr := repo.List(context.TODO(), domain.Pagination{}, domain.StreetMarketFilter{})
 
 			if !errors.Is(gErr, tc.wErr) {
 				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
@@ -405,14 +420,19 @@ func TestStreetMarketRepository_Update_Error(t *testing.T) {
 }
 
 func TestStreetMarketRepository_buildArgs(t *testing.T) {
+	n := time.Now()
+
 	inp := struct {
 		Foo         string
 		Bar         int
 		EmptyString string
 		EmptyInt    int
+		EmptyFloat  float64
+		Createdat   *time.Time
 	}{
-		Foo: "foo",
-		Bar: 12,
+		Foo:       "foo",
+		Bar:       12,
+		Createdat: &n,
 	}
 
 	wC := []string{"foo", "bar"}
@@ -431,5 +451,15 @@ func TestStreetMarketRepository_buildArgs(t *testing.T) {
 
 	if diff := cmp.Diff(wV, gV); diff != "" {
 		t.Errorf("unexpected values returned (-want +got):\n%s", diff)
+	}
+}
+
+func TestStreetMarketRepository_ignore(t *testing.T) {
+	if !ignore("a", []any{"a"}) {
+		t.Errorf("expect ignore a")
+	}
+
+	if ignore("b", []any{"a"}) {
+		t.Errorf("expect no ignore b")
 	}
 }

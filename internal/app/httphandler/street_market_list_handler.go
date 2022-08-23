@@ -2,13 +2,17 @@ package httphandler
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/Danielsilveira98/unicoAPITest/internal/domain"
 )
 
+var ErrInvalidQueryParam = errors.New("query param is invalid")
+
 type streetMarketLister interface {
-	List(context.Context, domain.StreetMarketFilter) ([]domain.StreetMarket, error)
+	List(context.Context, int, domain.StreetMarketFilter) ([]domain.StreetMarket, error)
 }
 
 type listStreetMarketResponse map[string][]streetMarketResponse
@@ -29,19 +33,21 @@ func (h *StreetMarketListHandler) Handle(w http.ResponseWriter, r *http.Request)
 		Neighborhood: r.FormValue("bairro"),
 	}
 
-	ls, err := h.getter.List(r.Context(), f)
+	var pgn int
+	var err error
+	page := r.FormValue("page")
+	if page != "" {
+		pgn, err = strconv.Atoi(page)
+		if err != nil {
+			respondError(w, http.StatusBadRequest, ErrInvalidQueryParam.Error())
+			return
+		}
+	}
+
+	ls, err := h.getter.List(r.Context(), pgn, f)
 
 	if err != nil {
-		var status int
-
-		switch err {
-		case domain.ErrInpValidation:
-			status = http.StatusBadRequest
-		default:
-			status = http.StatusInternalServerError
-		}
-
-		respondError(w, status, err.Error())
+		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

@@ -13,28 +13,32 @@ import (
 )
 
 type stubStreetMarketLister struct {
-	listInp domain.StreetMarketFilter
-	list    func(context.Context, domain.StreetMarketFilter) ([]domain.StreetMarket, error)
+	listInp   domain.StreetMarketFilter
+	listPgInp int
+	list      func(context.Context, int, domain.StreetMarketFilter) ([]domain.StreetMarket, error)
 }
 
 func (s *stubStreetMarketLister) List(
 	ctx context.Context,
+	page int,
 	inp domain.StreetMarketFilter,
 ) ([]domain.StreetMarket, error) {
 	s.listInp = inp
-	return s.list(ctx, inp)
+	s.listPgInp = page
+	return s.list(ctx, page, inp)
 }
 
 func TestStreetMarketListHandler_Handle(t *testing.T) {
+	page := 2
 	list := []domain.StreetMarket{{
 		ID:            "2c809e53-6e2e-4a60-bbf4-de8913562970",
 		Long:          -46548146,
 		Lat:           -23568390,
 		SectCens:      "355030885000019",
 		Area:          "3550308005040",
-		IDdist:        87,
+		IDdist:        "87",
 		District:      "VILA FORMOSA",
-		IDSubTH:       26,
+		IDSubTH:       "26",
 		SubTownHall:   "ARICANDUVA",
 		Region5:       "Leste",
 		Region8:       "Leste 1",
@@ -69,7 +73,7 @@ func TestStreetMarketListHandler_Handle(t *testing.T) {
 	}
 
 	listerMock := &stubStreetMarketLister{
-		list: func(ctx context.Context, inp domain.StreetMarketFilter) ([]domain.StreetMarket, error) {
+		list: func(ctx context.Context, page int, inp domain.StreetMarketFilter) ([]domain.StreetMarket, error) {
 			return list, nil
 		},
 	}
@@ -79,7 +83,7 @@ func TestStreetMarketListHandler_Handle(t *testing.T) {
 		Neighborhood: "centro",
 	}
 
-	path := fmt.Sprintf("/street_market?distrito=%s&bairro=%s", wantInp.District, wantInp.Neighborhood)
+	path := fmt.Sprintf("/street_market?distrito=%s&bairro=%s&page=%v", wantInp.District, wantInp.Neighborhood, page)
 	req, err := http.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -107,6 +111,10 @@ func TestStreetMarketListHandler_Handle(t *testing.T) {
 	if diff := cmp.Diff(wantInp, listerMock.listInp); diff != "" {
 		t.Errorf("street market lister list receive a unexpected input  (-want +got):\n%s", diff)
 	}
+
+	if page != listerMock.listPgInp {
+		t.Errorf("expect street market lister list receive page %v, got %v ", page, listerMock.listPgInp)
+	}
 }
 
 func TestStreetMarketListHandler_Handle_Error(t *testing.T) {
@@ -114,23 +122,31 @@ func TestStreetMarketListHandler_Handle_Error(t *testing.T) {
 		listerErr    error
 		wantStatusCd int
 		wantBody     ErrorResponse
+		path         string
 	}{
 		"Unexpected error": {
 			listerErr:    domain.ErrUnexpected,
 			wantStatusCd: http.StatusInternalServerError,
 			wantBody:     ErrorResponse{"error": domain.ErrUnexpected.Error()},
+			path:         "/street_market",
+		},
+		"Param page invalid": {
+			listerErr:    ErrInvalidQueryParam,
+			wantStatusCd: http.StatusBadRequest,
+			wantBody:     ErrorResponse{"error": ErrInvalidQueryParam.Error()},
+			path:         "/street_market?page=invalid",
 		},
 	}
 
 	for title, tc := range testCases {
 		t.Run(title, func(t *testing.T) {
 			listerMock := &stubStreetMarketLister{
-				list: func(ctx context.Context, inp domain.StreetMarketFilter) ([]domain.StreetMarket, error) {
+				list: func(ctx context.Context, page int, inp domain.StreetMarketFilter) ([]domain.StreetMarket, error) {
 					return nil, tc.listerErr
 				},
 			}
 
-			req, err := http.NewRequest(http.MethodGet, "/street_market", nil)
+			req, err := http.NewRequest(http.MethodGet, tc.path, nil)
 			if err != nil {
 				t.Fatal(err)
 			}

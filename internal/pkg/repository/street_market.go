@@ -22,6 +22,7 @@ func NewStreetMarketRepository(db *sql.DB) *StreetMarketRepository {
 
 func (r *StreetMarketRepository) List(
 	ctx context.Context,
+	pg domain.Pagination,
 	query domain.StreetMarketFilter,
 ) ([]domain.StreetMarket, error) {
 	bq := "SELECT * FROM street_market"
@@ -38,7 +39,8 @@ func (r *StreetMarketRepository) List(
 		bq = fmt.Sprintf("%s WHERE %s", bq, strings.Join(where, " AND "))
 	}
 
-	res, err := r.db.QueryContext(ctx, bq, args...)
+	q := fmt.Sprintf("%s ORDER BY createdat DESC OFFSET %v LIMIT %v", bq, pg.Offset, pg.Limit)
+	res, err := r.db.QueryContext(ctx, q, args...)
 	if err != nil {
 		return nil, fmt.Errorf("%w", domain.ErrUnexpected)
 	}
@@ -64,6 +66,7 @@ func (r *StreetMarketRepository) List(
 			&sm.Number,
 			&sm.Neighborhood,
 			&sm.AddrExtraInfo,
+			&sm.CreatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("%w", domain.ErrUnexpected)
 		}
@@ -155,18 +158,31 @@ func buildArgs(inp interface{}) (columns, placeHolders []string, values []interf
 	v := reflect.ValueOf(inp)
 	t := reflect.TypeOf(inp)
 
-	phC := 1
+	asEmpty := []any{"", 0, 0.0, nil}
 
+	blacklist := []any{"createdat"}
+
+	phC := 1
 	for i := 0; i < v.NumField(); i++ {
 		value := v.Field(i).Interface()
-		if value != "" && value != 0 && value != 0.0 {
+		cn := strings.ToLower(string(t.Field(i).Name))
+		if !ignore(value, asEmpty) && !ignore(cn, blacklist) {
 			values = append(values, value)
 			placeHolders = append(placeHolders, fmt.Sprintf("$%v", phC))
 			phC += 1
-			cn := string(t.Field(i).Name)
-			columns = append(columns, strings.ToLower(cn))
+			columns = append(columns, cn)
 		}
 	}
 
 	return columns, placeHolders, values
+}
+
+func ignore(value any, list []any) bool {
+	for _, cl := range list {
+		if cl == value {
+			return true
+		}
+	}
+
+	return false
 }
