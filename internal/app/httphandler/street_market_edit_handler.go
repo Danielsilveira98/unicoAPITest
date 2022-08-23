@@ -69,6 +69,8 @@ func (h *StreetMarketEditHandler) Handle(w http.ResponseWriter, r *http.Request)
 		switch err {
 		case domain.ErrInpValidation:
 			status = http.StatusBadRequest
+		case domain.ErrSMNotFound:
+			status = http.StatusNotFound
 		default:
 			status = http.StatusInternalServerError
 		}

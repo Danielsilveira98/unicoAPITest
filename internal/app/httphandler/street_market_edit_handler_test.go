@@ -121,6 +121,13 @@ func TestStreetMarketEditHandler_Handle_Error(t *testing.T) {
 			wantStatusCd: http.StatusInternalServerError,
 			wantBody:     ErrorResponse{"error": domain.ErrUnexpected.Error()},
 		},
+		"Street Market not founded": {
+			rBody:        streetMarketBody{},
+			id:           "70ec02cb-0e4a-44cc-b0f7-83c040cb83ea",
+			editorErr:    domain.ErrSMNotFound,
+			wantStatusCd: http.StatusNotFound,
+			wantBody:     ErrorResponse{"error": domain.ErrSMNotFound.Error()},
+		},
 	}
 
 	for title, tc := range testCases {
