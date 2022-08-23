@@ -62,18 +62,18 @@ func setupDB() (*sql.DB, error) {
 
 	db, err := sql.Open(os.Getenv("DB_DIALECT"), psqlInfo)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w", err)
 	}
 	return db, nil
 }
 
 func runMigrations(db *sql.DB) error {
 	if err := goose.SetDialect(os.Getenv("DB_DIALECT")); err != nil {
-		return err
+		return fmt.Errorf("%w", err)
 	}
 
 	if err := goose.Up(db, os.Getenv("MIGRATIONS_PATH")); err != nil {
-		return err
+		return fmt.Errorf("%w", err)
 	}
 
 	return nil
