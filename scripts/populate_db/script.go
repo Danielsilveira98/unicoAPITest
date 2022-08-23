@@ -57,7 +57,6 @@ func main() {
 
 	dataPath := os.Getenv("DATA_PATH")
 	files, err := ioutil.ReadDir(dataPath)
-	// _, err = ioutil.ReadDir(dataPath)
 	if err != nil {
 		panic(err)
 	}
@@ -71,11 +70,15 @@ func main() {
 		}
 
 		for _, sm := range sms {
-			id, err := srv.Create(ctx, sm)
-			if err != nil {
+			if err := sm.Validate(); err != nil {
 				fmt.Println(err)
 			} else {
-				fmt.Println(id)
+				id, err := srv.Create(ctx, sm)
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					fmt.Println(id)
+				}
 			}
 		}
 	}
@@ -116,7 +119,6 @@ func processFile(path string) ([]domain.StreetMarketCreateInput, error) {
 		}
 
 		var long, lat float64
-		var iddist, idSubTH int
 
 		if long, err = strconv.ParseFloat(line[1], 32); line[1] != "" && err != nil {
 			fmt.Printf("long : %s \n", line[1])
@@ -128,25 +130,15 @@ func processFile(path string) ([]domain.StreetMarketCreateInput, error) {
 			fmt.Println(err)
 			return nil, fmt.Errorf("%w", err)
 		}
-		if iddist, err = strconv.Atoi(line[5]); line[5] != "" && err != nil {
-			fmt.Printf("iddist : %s \n", line[5])
-			fmt.Println(err)
-			return nil, fmt.Errorf("%w", err)
-		}
-		if idSubTH, err = strconv.Atoi(line[7]); line[7] != "" && err != nil {
-			fmt.Printf("idSubTH : %s \n", line[7])
-			fmt.Println(err)
-			return nil, fmt.Errorf("%w", err)
-		}
 
 		sm := domain.StreetMarketCreateInput{
 			Long:          long,
 			Lat:           lat,
 			SectCens:      line[3],
 			Area:          line[4],
-			IDdist:        iddist,
+			IDdist:        line[6],
 			District:      line[6],
-			IDSubTH:       idSubTH,
+			IDSubTH:       line[7],
 			SubTownHall:   line[8],
 			Region5:       line[9],
 			Region8:       line[10],

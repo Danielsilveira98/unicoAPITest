@@ -33,9 +33,9 @@ type streetMarketBody struct {
 	Lat           float64 `json:"lat"`
 	SectCens      string  `json:"setcens"`
 	Area          string  `json:"areap"`
-	IDdist        int     `json:"coddist"`
+	IDdist        string  `json:"coddist"`
 	District      string  `json:"distrito"`
-	IDSubTH       int     `json:"codsubpref"`
+	IDSubTH       string  `json:"codsubpref"`
 	SubTownHall   string  `json:"subpref"`
 	Region5       string  `json:"regiao5"`
 	Region8       string  `json:"regiao8"`
@@ -53,9 +53,9 @@ type streetMarketResponse struct {
 	Lat           float64 `json:"lat,omitempty"`
 	SectCens      string  `json:"setcens,omitempty"`
 	Area          string  `json:"areap,omitempty"`
-	IDdist        int     `json:"coddist,omitempty"`
+	IDdist        string  `json:"coddist,omitempty"`
 	District      string  `json:"distrito,omitempty"`
-	IDSubTH       int     `json:"codsubpref,omitempty"`
+	IDSubTH       string  `json:"codsubpref,omitempty"`
 	SubTownHall   string  `json:"subpref,omitempty"`
 	Region5       string  `json:"regiao5,omitempty"`
 	Region8       string  `json:"regiao8,omitempty"`

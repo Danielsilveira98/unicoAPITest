@@ -33,9 +33,9 @@ func TestStreetMarketReader_List(t *testing.T) {
 		Lat:           -23568390,
 		SectCens:      "355030885000019",
 		Area:          "3550308005040",
-		IDdist:        87,
+		IDdist:        "87",
 		District:      "VILA FORMOSA",
-		IDSubTH:       26,
+		IDSubTH:       "26",
 		SubTownHall:   "ARICANDUVA",
 		Region5:       "Leste",
 		Region8:       "Leste 1",
@@ -48,7 +48,11 @@ func TestStreetMarketReader_List(t *testing.T) {
 	}}
 
 	repoMock := &stubRepositoryReader{
-		list: func(ctx context.Context, pc domain.Pagination, query domain.StreetMarketFilter) ([]domain.StreetMarket, error) {
+		list: func(
+			ctx context.Context,
+			pc domain.Pagination,
+			query domain.StreetMarketFilter,
+		) ([]domain.StreetMarket, error) {
 			return want, nil
 		},
 	}
@@ -74,7 +78,7 @@ func TestStreetMarketReader_List(t *testing.T) {
 		}
 
 		wPc := domain.Pagination{
-			Offset: 1,
+			Offset: 0,
 			Limit:  100,
 		}
 		if diff := cmp.Diff(wPc, repoMock.listPCInp); diff != "" {
@@ -94,7 +98,7 @@ func TestStreetMarketReader_List(t *testing.T) {
 		}
 
 		wPc := domain.Pagination{
-			Offset: 1,
+			Offset: 0,
 			Limit:  100,
 		}
 		if diff := cmp.Diff(wPc, repoMock.listPCInp); diff != "" {
@@ -140,7 +144,11 @@ func TestStreetMarketReader_List_Error(t *testing.T) {
 	for title, tc := range testCases {
 		t.Run(title, func(t *testing.T) {
 			repoMock := &stubRepositoryReader{
-				list: func(ctx context.Context, pc domain.Pagination, query domain.StreetMarketFilter) ([]domain.StreetMarket, error) {
+				list: func(
+					ctx context.Context,
+					pc domain.Pagination,
+					query domain.StreetMarketFilter,
+				) ([]domain.StreetMarket, error) {
 					return nil, tc.rErr
 				},
 			}
