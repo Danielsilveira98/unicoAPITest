@@ -27,10 +27,10 @@ func NewStreetMarketListHandler(getter streetMarketLister) *StreetMarketListHand
 
 func (h *StreetMarketListHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	f := domain.StreetMarketFilter{
-		District:     r.FormValue("distrito"),
-		Region5:      r.FormValue("regiao5"),
-		Name:         r.FormValue("nome_feira"),
-		Neighborhood: r.FormValue("bairro"),
+		District:     r.FormValue("district"),
+		Region5:      r.FormValue("region5"),
+		Name:         r.FormValue("name"),
+		Neighborhood: r.FormValue("neighborhood"),
 	}
 
 	var pgn int

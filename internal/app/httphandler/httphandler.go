@@ -31,38 +31,38 @@ func respondError(w http.ResponseWriter, code int, message string) {
 type streetMarketBody struct {
 	Long          float64 `json:"long"`
 	Lat           float64 `json:"lat"`
-	SectCens      string  `json:"setcens"`
-	Area          string  `json:"areap"`
-	IDdist        string  `json:"coddist"`
-	District      string  `json:"distrito"`
-	IDSubTH       string  `json:"codsubpref"`
-	SubTownHall   string  `json:"subpref"`
-	Region5       string  `json:"regiao5"`
-	Region8       string  `json:"regiao8"`
-	Name          string  `json:"nome_feira"`
-	Register      string  `json:"registro"`
-	Street        string  `json:"logradouro"`
-	Number        string  `json:"numero"`
-	Neighborhood  string  `json:"bairro"`
-	AddrExtraInfo string  `json:"referencia"`
+	SectCens      string  `json:"sect_cens"`
+	Area          string  `json:"area"`
+	IDdist        string  `json:"id_dist"`
+	District      string  `json:"district"`
+	IDSubTH       string  `json:"id_sub_th"`
+	SubTownHall   string  `json:"subtownhall"`
+	Region5       string  `json:"region_5"`
+	Region8       string  `json:"region_8"`
+	Name          string  `json:"name"`
+	Register      string  `json:"register"`
+	Street        string  `json:"street"`
+	Number        string  `json:"number"`
+	Neighborhood  string  `json:"neighborhood"`
+	AddrExtraInfo string  `json:"addr_extra_info"`
 }
 
 type streetMarketResponse struct {
 	ID            string  `json:"id,omitempty"`
 	Long          float64 `json:"long,omitempty"`
 	Lat           float64 `json:"lat,omitempty"`
-	SectCens      string  `json:"setcens,omitempty"`
-	Area          string  `json:"areap,omitempty"`
-	IDdist        string  `json:"coddist,omitempty"`
-	District      string  `json:"distrito,omitempty"`
-	IDSubTH       string  `json:"codsubpref,omitempty"`
-	SubTownHall   string  `json:"subpref,omitempty"`
-	Region5       string  `json:"regiao5,omitempty"`
-	Region8       string  `json:"regiao8,omitempty"`
-	Name          string  `json:"nome_feira,omitempty"`
-	Register      string  `json:"registro,omitempty"`
-	Street        string  `json:"logradouro,omitempty"`
-	Number        string  `json:"numero,omitempty"`
-	Neighborhood  string  `json:"bairro,omitempty"`
-	AddrExtraInfo string  `json:"referencia,omitempty"`
+	SectCens      string  `json:"sect_cens,omitempty"`
+	Area          string  `json:"area,omitempty"`
+	IDdist        string  `json:"id_dist,omitempty"`
+	District      string  `json:"district,omitempty"`
+	IDSubTH       string  `json:"id_sub_th,omitempty"`
+	SubTownHall   string  `json:"subtownhall,omitempty"`
+	Region5       string  `json:"region_5,omitempty"`
+	Region8       string  `json:"region_8,omitempty"`
+	Name          string  `json:"name,omitempty"`
+	Register      string  `json:"register,omitempty"`
+	Street        string  `json:"street,omitempty"`
+	Number        string  `json:"number,omitempty"`
+	Neighborhood  string  `json:"neighborhood,omitempty"`
+	AddrExtraInfo string  `json:"addr_extra_info,omitempty"`
 }

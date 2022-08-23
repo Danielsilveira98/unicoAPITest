@@ -83,7 +83,7 @@ func TestStreetMarketListHandler_Handle(t *testing.T) {
 		Neighborhood: "centro",
 	}
 
-	path := fmt.Sprintf("/street_market?distrito=%s&bairro=%s&page=%v", wantInp.District, wantInp.Neighborhood, page)
+	path := fmt.Sprintf("/street_market?district=%s&neighborhood=%s&page=%v", wantInp.District, wantInp.Neighborhood, page)
 	req, err := http.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
 		t.Fatal(err)
