@@ -128,6 +128,10 @@ func TestStreetMarketWriter_Create_Error(t *testing.T) {
 			inp:   validInp,
 			IDGen: "70bb2026-9e6a-4dad-9f86-99dbddf3a087",
 		},
+		"When input is invalid": {
+			wErr: domain.ErrInpValidation,
+			inp:  domain.StreetMarketCreateInput{},
+		},
 	}
 	for title, tc := range testCases {
 		t.Run(title, func(t *testing.T) {
