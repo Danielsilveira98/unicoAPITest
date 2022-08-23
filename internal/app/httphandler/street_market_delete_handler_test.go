@@ -76,6 +76,12 @@ func TestStreetMarketDeleteHandler_Handle_Error(t *testing.T) {
 			wantStatusCd: http.StatusBadRequest,
 			wantBody:     ErrorResponse{"error": domain.ErrInpValidation.Error()},
 		},
+		"Street Market not founded": {
+			id:           "id",
+			eraserErr:    domain.ErrSMNotFound,
+			wantStatusCd: http.StatusNotFound,
+			wantBody:     ErrorResponse{"error": domain.ErrSMNotFound.Error()},
+		},
 	}
 
 	for title, tc := range testCases {
