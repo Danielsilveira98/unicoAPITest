@@ -10,6 +10,7 @@ const (
 	NothingUpdatedErrKd KindError = "NOTHING_UPDATED"
 	NothingDeletedErrKd KindError = "NOTHING_DELETED"
 	SMNotFoundErrKd     KindError = "STREET_MARKET_NOT_FOUND"
+	InpValidationErrKd  KindError = "INPUT_IS_INVALID"
 )
 
 type Error struct {
