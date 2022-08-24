@@ -2,13 +2,12 @@ package streetmarket
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Danielsilveira98/unicoAPITest/internal/domain"
 )
 
 type repositoryEraser interface {
-	DeleteByID(ctx context.Context, ID string) error
+	DeleteByID(ctx context.Context, ID string) *domain.Error
 }
 
 type StreetMarketEraser struct {
@@ -19,21 +18,22 @@ func NewEraser(repo repositoryEraser) *StreetMarketEraser {
 	return &StreetMarketEraser{repo}
 }
 
-func (s *StreetMarketEraser) Delete(ctx context.Context, ID domain.SMID) error {
+func (s *StreetMarketEraser) Delete(ctx context.Context, ID domain.SMID) *domain.Error {
 	if err := ID.Validate(); err != nil {
-		return fmt.Errorf("[ID.Validate] %s %w", domain.ErrInpValidation.Error(), err)
+		return &domain.Error{
+			Kind:     domain.InpValidationErrKd,
+			Msg:      "Invalid ID",
+			Previous: err,
+		}
 	}
 
 	if err := s.repo.DeleteByID(ctx, string(ID)); err != nil {
-		var msg string
-		switch err {
-		case domain.ErrNothingDeleted:
-			msg = domain.ErrSMNotFound.Error()
+		switch err.Kind {
+		case domain.NothingDeletedErrKd:
+			return &domain.Error{Kind: domain.SMNotFoundErrKd, Msg: "Entity not exists", Previous: err}
 		default:
-			msg = domain.ErrUnexpected.Error()
+			return &domain.Error{Kind: domain.UnexpectedErrKd, Msg: "Unexpected error when delete", Previous: err}
 		}
-
-		return fmt.Errorf("[repo.DeleteByID] %s %w", msg, err)
 	}
 
 	return nil

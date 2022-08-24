@@ -2,7 +2,6 @@ package streetmarket
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/Danielsilveira98/unicoAPITest/internal/domain"
@@ -10,10 +9,10 @@ import (
 
 type stubRepositoryEraser struct {
 	deleteInp  string
-	deleteByID func(ctx context.Context, ID string) error
+	deleteByID func(ctx context.Context, ID string) *domain.Error
 }
 
-func (s *stubRepositoryEraser) DeleteByID(ctx context.Context, ID string) error {
+func (s *stubRepositoryEraser) DeleteByID(ctx context.Context, ID string) *domain.Error {
 	s.deleteInp = ID
 	return s.deleteByID(ctx, ID)
 }
@@ -22,7 +21,7 @@ func TestStreetMarketEraser_Delete(t *testing.T) {
 	var wID domain.SMID = "662ea609-2ef5-4026-a402-218dd316cc03"
 
 	repoMock := &stubRepositoryEraser{
-		deleteByID: func(ctx context.Context, ID string) error {
+		deleteByID: func(ctx context.Context, ID string) *domain.Error {
 			return nil
 		},
 	}
@@ -42,22 +41,22 @@ func TestStreetMarketEraser_Delete(t *testing.T) {
 
 func TestStreetMarketEraser_Delete_Error(t *testing.T) {
 	testCases := map[string]struct {
-		rErr error
+		rErr *domain.Error
 		ID   domain.SMID
-		wErr error
+		wErr domain.KindError
 	}{
 		"When id is invalid": {
-			wErr: domain.ErrInpValidation,
+			wErr: domain.InpValidationErrKd,
 			ID:   "invalid",
 		},
 		"When street market not exists": {
-			rErr: domain.ErrNothingDeleted,
-			wErr: domain.ErrSMNotFound,
+			rErr: &domain.Error{Kind: domain.NothingDeletedErrKd},
+			wErr: domain.SMNotFoundErrKd,
 			ID:   "29336645-6243-4279-b7ff-47f1a64aa781",
 		},
 		"When a unexpected error occurs in repository": {
-			rErr: errSome,
-			wErr: domain.ErrUnexpected,
+			rErr: unexpectedErr,
+			wErr: domain.UnexpectedErrKd,
 			ID:   "6c34a17f-6330-4625-9184-25eb0a5c6533",
 		},
 	}
@@ -65,7 +64,7 @@ func TestStreetMarketEraser_Delete_Error(t *testing.T) {
 	for title, tc := range testCases {
 		t.Run(title, func(t *testing.T) {
 			repoMock := &stubRepositoryEraser{
-				deleteByID: func(ctx context.Context, ID string) error {
+				deleteByID: func(ctx context.Context, ID string) *domain.Error {
 					return tc.rErr
 				},
 			}
@@ -74,8 +73,8 @@ func TestStreetMarketEraser_Delete_Error(t *testing.T) {
 
 			gErr := srv.Delete(context.TODO(), tc.ID)
 
-			if !errors.As(gErr, &tc.wErr) {
-				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
+			if gErr.Kind != tc.wErr {
+				t.Errorf("Want error kind %v, got error %v", tc.wErr, gErr.Kind)
 			}
 		})
 	}
