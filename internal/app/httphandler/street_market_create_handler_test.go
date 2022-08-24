@@ -15,10 +15,10 @@ import (
 
 type stubStreetMarketCreator struct {
 	createInp domain.StreetMarketCreateInput
-	create    func(context.Context, domain.StreetMarketCreateInput) (string, error)
+	create    func(context.Context, domain.StreetMarketCreateInput) (string, *domain.Error)
 }
 
-func (s *stubStreetMarketCreator) Create(ctx context.Context, inp domain.StreetMarketCreateInput) (string, error) {
+func (s *stubStreetMarketCreator) Create(ctx context.Context, inp domain.StreetMarketCreateInput) (string, *domain.Error) {
 	s.createInp = inp
 	return s.create(ctx, inp)
 }
@@ -63,7 +63,7 @@ func TestStreetMarketCreateHandler_Handle(t *testing.T) {
 	}
 
 	creatorMock := &stubStreetMarketCreator{
-		create: func(ctx context.Context, pci domain.StreetMarketCreateInput) (string, error) {
+		create: func(ctx context.Context, pci domain.StreetMarketCreateInput) (string, *domain.Error) {
 			return id, nil
 		},
 	}
@@ -78,7 +78,7 @@ func TestStreetMarketCreateHandler_Handle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h := NewStreetMarketCreateHandler(creatorMock)
+	h := NewStreetMarketCreateHandler(creatorMock, &stubLogger{})
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(h.Handle)
 	handler.ServeHTTP(rr, req)
@@ -95,22 +95,28 @@ func TestStreetMarketCreateHandler_Handle(t *testing.T) {
 func TestStreetMarketCreateHandler_Handle_Error(t *testing.T) {
 	testCases := map[string]struct {
 		rBody        streetMarketBody
-		creatorErr   error
+		creatorErr   *domain.Error
 		wantStatusCd int
 		wantBody     ErrorResponse
 	}{
+		"Invalid input": {
+			rBody:        streetMarketBody{},
+			creatorErr:   &domain.Error{Kind: domain.InpValidationErrKd, Msg: "Error"},
+			wantStatusCd: http.StatusBadRequest,
+			wantBody:     ErrorResponse{"error": "Error"},
+		},
 		"Unexpected error": {
 			rBody:        streetMarketBody{},
-			creatorErr:   domain.ErrUnexpected,
+			creatorErr:   &domain.Error{Kind: domain.UnexpectedErrKd, Msg: "Unexpected"},
 			wantStatusCd: http.StatusInternalServerError,
-			wantBody:     ErrorResponse{"error": domain.ErrUnexpected.Error()},
+			wantBody:     ErrorResponse{"error": "Unexpected"},
 		},
 	}
 
 	for title, tc := range testCases {
 		t.Run(title, func(t *testing.T) {
 			creatorMock := &stubStreetMarketCreator{
-				create: func(ctx context.Context, pci domain.StreetMarketCreateInput) (string, error) {
+				create: func(ctx context.Context, pci domain.StreetMarketCreateInput) (string, *domain.Error) {
 					return "", tc.creatorErr
 				},
 			}
@@ -125,7 +131,7 @@ func TestStreetMarketCreateHandler_Handle_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			h := NewStreetMarketCreateHandler(creatorMock)
+			h := NewStreetMarketCreateHandler(creatorMock, &stubLogger{})
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(h.Handle)
 			handler.ServeHTTP(rr, req)
@@ -152,7 +158,7 @@ func TestStreetMarketCreateHandler_Handle_Error(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		h := NewStreetMarketCreateHandler(&stubStreetMarketCreator{})
+		h := NewStreetMarketCreateHandler(&stubStreetMarketCreator{}, &stubLogger{})
 		rr := httptest.NewRecorder()
 		handler := http.HandlerFunc(h.Handle)
 		handler.ServeHTTP(rr, req)

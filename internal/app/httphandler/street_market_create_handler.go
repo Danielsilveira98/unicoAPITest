@@ -12,29 +12,44 @@ import (
 
 type streetMarketCreator interface {
 	Create(context.Context,
-		domain.StreetMarketCreateInput) (string,
-		error)
+		domain.StreetMarketCreateInput) (string, *domain.Error)
+}
+type streetMarketCreateHandlerLogger interface {
+	Error(context.Context, domain.Error)
 }
 
 type StreetMarketCreateHandler struct {
 	creator streetMarketCreator
+	logger  streetMarketCreateHandlerLogger
 }
 
-func NewStreetMarketCreateHandler(creator streetMarketCreator) *StreetMarketCreateHandler {
-	return &StreetMarketCreateHandler{creator}
+func NewStreetMarketCreateHandler(
+	creator streetMarketCreator,
+	logger streetMarketCreateHandlerLogger,
+) *StreetMarketCreateHandler {
+	return &StreetMarketCreateHandler{creator, logger}
 }
 
 func (h *StreetMarketCreateHandler) Handle(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var body streetMarketBody
 
 	bb, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		h.logger.Error(ctx, domain.Error{
+			Kind: domain.UnexpectedErrKd,
+			Msg:  err.Error(),
+		})
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	defer r.Body.Close()
 
 	if err := json.Unmarshal(bb, &body); err != nil {
+		h.logger.Error(ctx, domain.Error{
+			Kind: domain.InpValidationErrKd,
+			Msg:  err.Error(),
+		})
 		respondError(w, http.StatusBadRequest, "malformed body")
 		return
 	}
@@ -58,20 +73,20 @@ func (h *StreetMarketCreateHandler) Handle(w http.ResponseWriter, r *http.Reques
 		AddrExtraInfo: body.AddrExtraInfo,
 	}
 
-	id, err := h.creator.Create(r.Context(), input)
+	id, dErr := h.creator.Create(r.Context(), input)
 
-	if err != nil {
-		fmt.Printf("%v", err)
+	if dErr != nil {
 		var status int
 
-		switch err {
-		case domain.ErrInpValidation:
+		switch dErr.Kind {
+		case domain.InpValidationErrKd:
 			status = http.StatusBadRequest
 		default:
+			h.logger.Error(ctx, *dErr)
 			status = http.StatusInternalServerError
 		}
 
-		respondError(w, status, err.Error())
+		respondError(w, status, dErr.Error())
 		return
 	}
 

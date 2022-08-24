@@ -18,12 +18,12 @@ type streetMarketDeleteHandlerLogger interface {
 
 type StreetMarketDeleteHandler struct {
 	eraser streetMarketEraser
-	logger streetMarketWriteHandlerLogger
+	logger streetMarketCreateHandlerLogger
 }
 
 func NewStreetMarketDeleteHandler(
 	repo streetMarketEraser,
-	logger streetMarketWriteHandlerLogger,
+	logger streetMarketCreateHandlerLogger,
 ) *StreetMarketDeleteHandler {
 	return &StreetMarketDeleteHandler{repo, logger}
 }
