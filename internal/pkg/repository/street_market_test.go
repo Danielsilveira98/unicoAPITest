@@ -37,19 +37,19 @@ func TestStreetMarketRepository_Delete(t *testing.T) {
 
 func TestStreetMarketRepository_Delete_Error(t *testing.T) {
 	testCases := map[string]struct {
-		wErr   error
+		wErr   domain.KindError
 		mErr   error
 		notUpd bool
 		id     string
 	}{
 		"When unexpected error occurs": {
-			wErr: errSome,
+			wErr: domain.UnexpectedErrKd,
 			mErr: errSome,
 			id:   "822d08fb-6dbd-457b-a467-36ee3a136b13",
 		},
 		"When update nothing": {
 			notUpd: true,
-			wErr:   domain.ErrNothingDeleted,
+			wErr:   domain.NothingDeletedErrKd,
 			id:     "65ea9603-c3bb-4686-9700-8881c8a89374",
 		},
 	}
@@ -72,8 +72,8 @@ func TestStreetMarketRepository_Delete_Error(t *testing.T) {
 
 			gErr := repo.DeleteByID(context.TODO(), tc.id)
 
-			if !errors.Is(gErr, tc.wErr) {
-				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
+			if gErr.Kind != tc.wErr {
+				t.Errorf("Want error kind %v, got error %v", tc.wErr, gErr.Kind)
 			}
 
 			if err := mock.ExpectationsWereMet(); err != nil {
@@ -124,16 +124,16 @@ func TestStreetMarketRepository_Create(t *testing.T) {
 func TestStreetMarketRepository_Create_Error(t *testing.T) {
 	testCases := map[string]struct {
 		createNothing bool
-		wErr          error
+		wErr          domain.KindError
 		mErr          error
 	}{
 		"When unexpected error occurs": {
-			wErr: errSome,
+			wErr: domain.UnexpectedErrKd,
 			mErr: errSome,
 		},
 		"When create nothing": {
 			createNothing: true,
-			wErr:          domain.ErrNothingCreated,
+			wErr:          domain.NothingCreatedErrKd,
 		},
 	}
 
@@ -155,8 +155,8 @@ func TestStreetMarketRepository_Create_Error(t *testing.T) {
 
 			gErr := repo.Create(context.TODO(), domain.StreetMarket{})
 
-			if !errors.Is(gErr, tc.wErr) {
-				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
+			if gErr.Kind != tc.wErr {
+				t.Errorf("Want error kind %v, got error %v", tc.wErr, gErr.Kind)
 			}
 		})
 	}
@@ -256,10 +256,10 @@ func TestStreetMarketRepository_List(t *testing.T) {
 
 		repo := NewStreetMarketRepository(db)
 
-		r, err := repo.List(context.TODO(), pg, inp)
+		r, dErr := repo.List(context.TODO(), pg, inp)
 
-		if err != nil {
-			t.Errorf("expect return nil, got %v", err)
+		if dErr != nil {
+			t.Errorf("expect return nil, got %v", dErr)
 		}
 
 		if diff := cmp.Diff(want, r); diff != "" {
@@ -291,9 +291,9 @@ func TestStreetMarketRepository_List(t *testing.T) {
 
 		repo := NewStreetMarketRepository(db)
 
-		r, err := repo.List(context.TODO(), pg, domain.StreetMarketFilter{})
+		r, dErr := repo.List(context.TODO(), pg, domain.StreetMarketFilter{})
 
-		if err != nil {
+		if dErr != nil {
 			t.Errorf("expect return nil, got %v", err)
 		}
 
@@ -310,11 +310,11 @@ func TestStreetMarketRepository_List(t *testing.T) {
 
 func TestStreetMarketRepository_List_Error(t *testing.T) {
 	testCases := map[string]struct {
-		wErr error
+		wErr domain.KindError
 		mErr error
 	}{
 		"When unexpected error occurs": {
-			wErr: errSome,
+			wErr: domain.UnexpectedErrKd,
 			mErr: errSome,
 		},
 	}
@@ -333,8 +333,8 @@ func TestStreetMarketRepository_List_Error(t *testing.T) {
 
 			_, gErr := repo.List(context.TODO(), domain.Pagination{}, domain.StreetMarketFilter{})
 
-			if !errors.Is(gErr, tc.wErr) {
-				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
+			if gErr.Kind != tc.wErr {
+				t.Errorf("Want error kind %v, got error %v", tc.wErr, gErr.Kind)
 			}
 		})
 	}
@@ -381,16 +381,16 @@ func TestStreetMarketRepository_Update(t *testing.T) {
 func TestStreetMarketRepository_Update_Error(t *testing.T) {
 	testCases := map[string]struct {
 		updateNothing bool
-		wErr          error
+		wErr          domain.KindError
 		mErr          error
 	}{
 		"When unexpected error occurs": {
-			wErr: errSome,
+			wErr: domain.UnexpectedErrKd,
 			mErr: errSome,
 		},
 		"When create nothing": {
 			updateNothing: true,
-			wErr:          domain.ErrNothingUpdated,
+			wErr:          domain.NothingUpdatedErrKd,
 		},
 	}
 
@@ -412,8 +412,8 @@ func TestStreetMarketRepository_Update_Error(t *testing.T) {
 
 			gErr := repo.Update(context.TODO(), domain.StreetMarket{})
 
-			if !errors.Is(gErr, tc.wErr) {
-				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
+			if gErr.Kind != tc.wErr {
+				t.Errorf("Want error kind %v, got error %v", tc.wErr, gErr.Kind)
 			}
 		})
 	}

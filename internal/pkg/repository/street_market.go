@@ -24,7 +24,7 @@ func (r *StreetMarketRepository) List(
 	ctx context.Context,
 	pg domain.Pagination,
 	query domain.StreetMarketFilter,
-) ([]domain.StreetMarket, error) {
+) ([]domain.StreetMarket, *domain.Error) {
 	bq := "SELECT * FROM street_market"
 
 	cls, vls, args := buildArgs(query)
@@ -42,7 +42,10 @@ func (r *StreetMarketRepository) List(
 	q := fmt.Sprintf("%s ORDER BY createdat DESC OFFSET %v LIMIT %v", bq, pg.Offset, pg.Limit)
 	res, err := r.db.QueryContext(ctx, q, args...)
 	if err != nil {
-		return nil, fmt.Errorf("[QueryContext] %w", err)
+		return nil, &domain.Error{
+			Kind: domain.UnexpectedErrKd,
+			Msg:  err.Error(),
+		}
 	}
 
 	rrs := []domain.StreetMarket{}
@@ -68,7 +71,10 @@ func (r *StreetMarketRepository) List(
 			&sm.AddrExtraInfo,
 			&sm.CreatedAt,
 		); err != nil {
-			return nil, fmt.Errorf("[Scan] %w", domain.ErrUnexpected)
+			return nil, &domain.Error{
+				Kind: domain.UnexpectedErrKd,
+				Msg:  err.Error(),
+			}
 		}
 		rrs = append(rrs, sm)
 	}
@@ -76,7 +82,7 @@ func (r *StreetMarketRepository) List(
 	return rrs, nil
 }
 
-func (r *StreetMarketRepository) Create(ctx context.Context, streetMarket domain.StreetMarket) error {
+func (r *StreetMarketRepository) Create(ctx context.Context, streetMarket domain.StreetMarket) *domain.Error {
 	bq := "INSERT INTO street_market (%s) VALUES (%s)"
 
 	cl, vls, args := buildArgs(streetMarket)
@@ -85,22 +91,31 @@ func (r *StreetMarketRepository) Create(ctx context.Context, streetMarket domain
 
 	qr, err := r.db.ExecContext(ctx, q, args...)
 	if err != nil {
-		return fmt.Errorf("[ExecContext] %w", err)
+		return &domain.Error{
+			Kind: domain.UnexpectedErrKd,
+			Msg:  err.Error(),
+		}
 	}
 
 	ra, err := qr.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("[RowsAffected] %w", err)
+		return &domain.Error{
+			Kind: domain.UnexpectedErrKd,
+			Msg:  err.Error(),
+		}
 	}
 
 	if ra < 1 {
-		return domain.ErrNothingCreated
+		return &domain.Error{
+			Kind: domain.NothingCreatedErrKd,
+			Msg:  fmt.Sprintf("0 rows affected for id %s", streetMarket.ID),
+		}
 	}
 
 	return nil
 }
 
-func (r *StreetMarketRepository) Update(ctx context.Context, sm domain.StreetMarket) error {
+func (r *StreetMarketRepository) Update(ctx context.Context, sm domain.StreetMarket) *domain.Error {
 	id := sm.ID
 	sm.ID = ""
 
@@ -119,36 +134,54 @@ func (r *StreetMarketRepository) Update(ctx context.Context, sm domain.StreetMar
 	args = append(args, id)
 	qr, err := r.db.ExecContext(ctx, q, args...)
 	if err != nil {
-		return fmt.Errorf("[ExecContext] %w", err)
+		return &domain.Error{
+			Kind: domain.UnexpectedErrKd,
+			Msg:  err.Error(),
+		}
 	}
 
 	ra, err := qr.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("[RowsAffected] %w", err)
+		return &domain.Error{
+			Kind: domain.UnexpectedErrKd,
+			Msg:  err.Error(),
+		}
 	}
 
 	if ra < 1 {
-		return domain.ErrNothingUpdated
+		return &domain.Error{
+			Kind: domain.NothingUpdatedErrKd,
+			Msg:  fmt.Sprintf("0 rows affected for id %s", sm.ID),
+		}
 	}
 
 	return nil
 }
 
-func (r *StreetMarketRepository) DeleteByID(ctx context.Context, ID string) error {
+func (r *StreetMarketRepository) DeleteByID(ctx context.Context, ID string) *domain.Error {
 	q := "DELETE FROM street_market WHERE id = $1"
 
 	qr, err := r.db.ExecContext(ctx, q, ID)
 	if err != nil {
-		return fmt.Errorf("[ExecContext] %w", err)
+		return &domain.Error{
+			Kind: domain.UnexpectedErrKd,
+			Msg:  err.Error(),
+		}
 	}
 
 	ra, err := qr.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("[RowsAffected] %w", err)
+		return &domain.Error{
+			Kind: domain.UnexpectedErrKd,
+			Msg:  err.Error(),
+		}
 	}
 
 	if ra < 1 {
-		return domain.ErrNothingDeleted
+		return &domain.Error{
+			Kind: domain.NothingDeletedErrKd,
+			Msg:  fmt.Sprintf("0 rows affected for id %s", ID),
+		}
 	}
 
 	return nil
