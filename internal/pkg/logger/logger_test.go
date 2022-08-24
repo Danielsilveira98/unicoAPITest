@@ -19,14 +19,17 @@ func (s *stubWriter) Write(p []byte) (n int, err error) {
 	return s.write(p)
 }
 
+const (
+	traceID = "tracing"
+	msg     = "Log message"
+)
+
 func TestLogger_print(t *testing.T) {
 	pretty := []bool{false, true}
 	ctx := context.Background()
-	traceID := "myValue"
 	ctx = context.WithValue(ctx, domain.TraceIDCtxKey, traceID)
 
 	lvl := "test"
-	msg := "Some error"
 	metaData := map[string]interface{}{
 		"key": "value",
 	}
@@ -44,7 +47,13 @@ func TestLogger_print(t *testing.T) {
 
 		var gotL log
 
-		json.Unmarshal(writerMock.writeInp, &gotL)
+		err := json.Unmarshal(writerMock.writeInp, &gotL)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		if gotL.Time == nil {
 			t.Error("expect error with time not nil")
@@ -59,7 +68,7 @@ func TestLogger_print(t *testing.T) {
 		}
 
 		if traceID != gotL.TraceID {
-			t.Errorf("expect error with traceID as %v, got as %v", traceID, gotL.TraceID)
+			t.Errorf("expect error with traceID as %v, got as %v", domain.TraceIDCtxKey, gotL.TraceID)
 		}
 
 		if diff := cmp.Diff(metaData, gotL.MetaData); diff != "" {
@@ -70,22 +79,20 @@ func TestLogger_print(t *testing.T) {
 
 func TestLogget_getTraceID(t *testing.T) {
 	ctx := context.Background()
-	value := "myValue"
-	ctx = context.WithValue(ctx, domain.TraceIDCtxKey, value)
+	ctx = context.WithValue(ctx, domain.TraceIDCtxKey, traceID)
 
 	id := getTraceID(ctx)
 
-	if id != value {
-		t.Errorf("expect id %s, got %s", value, id)
+	if id != traceID {
+		t.Errorf("expect id %s, got %s", traceID, id)
 	}
 }
 
 func TestLogger_Infof(t *testing.T) {
 	ctx := context.Background()
-	traceID := "myValue"
 	ctx = context.WithValue(ctx, domain.TraceIDCtxKey, traceID)
 
-	msg := "Some error"
+	msg := "msg Infof"
 	metaData := map[string]interface{}{
 		"key": "value",
 	}
@@ -102,7 +109,10 @@ func TestLogger_Infof(t *testing.T) {
 
 	var gotL log
 
-	json.Unmarshal(writerMock.writeInp, &gotL)
+	err := json.Unmarshal(writerMock.writeInp, &gotL)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if gotL.Time == nil {
 		t.Error("expect error with time not nil")
@@ -117,7 +127,7 @@ func TestLogger_Infof(t *testing.T) {
 	}
 
 	if traceID != gotL.TraceID {
-		t.Errorf("expect error with traceID as %v, got as %v", traceID, gotL.TraceID)
+		t.Errorf("expect error with traceID as %v, got as %v", domain.TraceIDCtxKey, gotL.TraceID)
 	}
 
 	if diff := cmp.Diff(metaData, gotL.MetaData); diff != "" {
@@ -127,10 +137,9 @@ func TestLogger_Infof(t *testing.T) {
 
 func TestLogger_Debugf(t *testing.T) {
 	ctx := context.Background()
-	traceID := "myValue"
 	ctx = context.WithValue(ctx, domain.TraceIDCtxKey, traceID)
 
-	msg := "Some error"
+	msg := "msg Debugf"
 	metaData := map[string]interface{}{
 		"key": "value",
 	}
@@ -147,7 +156,10 @@ func TestLogger_Debugf(t *testing.T) {
 
 	var gotL log
 
-	json.Unmarshal(writerMock.writeInp, &gotL)
+	err := json.Unmarshal(writerMock.writeInp, &gotL)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if gotL.Time == nil {
 		t.Error("expect error with time not nil")
@@ -162,7 +174,7 @@ func TestLogger_Debugf(t *testing.T) {
 	}
 
 	if traceID != gotL.TraceID {
-		t.Errorf("expect error with traceID as %v, got as %v", traceID, gotL.TraceID)
+		t.Errorf("expect error with traceID as %v, got as %v", domain.TraceIDCtxKey, gotL.TraceID)
 	}
 
 	if diff := cmp.Diff(metaData, gotL.MetaData); diff != "" {
@@ -172,10 +184,9 @@ func TestLogger_Debugf(t *testing.T) {
 
 func TestLogger_Warnf(t *testing.T) {
 	ctx := context.Background()
-	traceID := "myValue"
 	ctx = context.WithValue(ctx, domain.TraceIDCtxKey, traceID)
 
-	msg := "Some error"
+	msg := "msg Warnf"
 	metaData := map[string]interface{}{
 		"key": "value",
 	}
@@ -192,7 +203,10 @@ func TestLogger_Warnf(t *testing.T) {
 
 	var gotL log
 
-	json.Unmarshal(writerMock.writeInp, &gotL)
+	err := json.Unmarshal(writerMock.writeInp, &gotL)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if gotL.Time == nil {
 		t.Error("expect error with time not nil")
@@ -207,7 +221,7 @@ func TestLogger_Warnf(t *testing.T) {
 	}
 
 	if traceID != gotL.TraceID {
-		t.Errorf("expect error with traceID as %v, got as %v", traceID, gotL.TraceID)
+		t.Errorf("expect error with traceID as %v, got as %v", domain.TraceIDCtxKey, gotL.TraceID)
 	}
 
 	if diff := cmp.Diff(metaData, gotL.MetaData); diff != "" {
@@ -217,10 +231,9 @@ func TestLogger_Warnf(t *testing.T) {
 
 func TestLogger_Errorf(t *testing.T) {
 	ctx := context.Background()
-	traceID := "myValue"
 	ctx = context.WithValue(ctx, domain.TraceIDCtxKey, traceID)
 
-	msg := "Some error"
+	msg := "msg Errorf"
 	metaData := map[string]interface{}{
 		"key": "value",
 	}
@@ -237,7 +250,10 @@ func TestLogger_Errorf(t *testing.T) {
 
 	var gotL log
 
-	json.Unmarshal(writerMock.writeInp, &gotL)
+	err := json.Unmarshal(writerMock.writeInp, &gotL)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if gotL.Time == nil {
 		t.Error("expect error with time not nil")
@@ -252,7 +268,7 @@ func TestLogger_Errorf(t *testing.T) {
 	}
 
 	if traceID != gotL.TraceID {
-		t.Errorf("expect error with traceID as %v, got as %v", traceID, gotL.TraceID)
+		t.Errorf("expect error with traceID as %v, got as %v", domain.TraceIDCtxKey, gotL.TraceID)
 	}
 
 	if diff := cmp.Diff(metaData, gotL.MetaData); diff != "" {
@@ -262,10 +278,9 @@ func TestLogger_Errorf(t *testing.T) {
 
 func TestLogger_Info(t *testing.T) {
 	ctx := context.Background()
-	traceID := "myValue"
 	ctx = context.WithValue(ctx, domain.TraceIDCtxKey, traceID)
 
-	msg := "Some error"
+	msg := "msg Info"
 
 	writerMock := &stubWriter{
 		write: func(p []byte) (n int, err error) {
@@ -279,7 +294,10 @@ func TestLogger_Info(t *testing.T) {
 
 	var gotL log
 
-	json.Unmarshal(writerMock.writeInp, &gotL)
+	err := json.Unmarshal(writerMock.writeInp, &gotL)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if gotL.Time == nil {
 		t.Error("expect error with time not nil")
@@ -294,17 +312,15 @@ func TestLogger_Info(t *testing.T) {
 	}
 
 	if traceID != gotL.TraceID {
-		t.Errorf("expect error with traceID as %v, got as %v", traceID, gotL.TraceID)
+		t.Errorf("expect error with traceID as %v, got as %v", domain.TraceIDCtxKey, gotL.TraceID)
 	}
-
 }
 
 func TestLogger_Debug(t *testing.T) {
 	ctx := context.Background()
-	traceID := "myValue"
 	ctx = context.WithValue(ctx, domain.TraceIDCtxKey, traceID)
 
-	msg := "Some error"
+	msg := "msg Debug"
 
 	writerMock := &stubWriter{
 		write: func(p []byte) (n int, err error) {
@@ -318,7 +334,10 @@ func TestLogger_Debug(t *testing.T) {
 
 	var gotL log
 
-	json.Unmarshal(writerMock.writeInp, &gotL)
+	err := json.Unmarshal(writerMock.writeInp, &gotL)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if gotL.Time == nil {
 		t.Error("expect error with time not nil")
@@ -333,17 +352,15 @@ func TestLogger_Debug(t *testing.T) {
 	}
 
 	if traceID != gotL.TraceID {
-		t.Errorf("expect error with traceID as %v, got as %v", traceID, gotL.TraceID)
+		t.Errorf("expect error with traceID as %v, got as %v", domain.TraceIDCtxKey, gotL.TraceID)
 	}
-
 }
 
 func TestLogger_Warn(t *testing.T) {
 	ctx := context.Background()
-	traceID := "myValue"
 	ctx = context.WithValue(ctx, domain.TraceIDCtxKey, traceID)
 
-	msg := "Some error"
+	msg := "msg Warn"
 
 	writerMock := &stubWriter{
 		write: func(p []byte) (n int, err error) {
@@ -357,7 +374,10 @@ func TestLogger_Warn(t *testing.T) {
 
 	var gotL log
 
-	json.Unmarshal(writerMock.writeInp, &gotL)
+	err := json.Unmarshal(writerMock.writeInp, &gotL)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if gotL.Time == nil {
 		t.Error("expect error with time not nil")
@@ -372,17 +392,15 @@ func TestLogger_Warn(t *testing.T) {
 	}
 
 	if traceID != gotL.TraceID {
-		t.Errorf("expect error with traceID as %v, got as %v", traceID, gotL.TraceID)
+		t.Errorf("expect error with traceID as %v, got as %v", domain.TraceIDCtxKey, gotL.TraceID)
 	}
-
 }
 
 func TestLogger_Error(t *testing.T) {
 	ctx := context.Background()
-	traceID := "myValue"
 	ctx = context.WithValue(ctx, domain.TraceIDCtxKey, traceID)
 
-	msg := "Some error"
+	msg := "msg Error"
 
 	writerMock := &stubWriter{
 		write: func(p []byte) (n int, err error) {
@@ -396,7 +414,10 @@ func TestLogger_Error(t *testing.T) {
 
 	var gotL log
 
-	json.Unmarshal(writerMock.writeInp, &gotL)
+	err := json.Unmarshal(writerMock.writeInp, &gotL)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if gotL.Time == nil {
 		t.Error("expect error with time not nil")
@@ -411,7 +432,6 @@ func TestLogger_Error(t *testing.T) {
 	}
 
 	if traceID != gotL.TraceID {
-		t.Errorf("expect error with traceID as %v, got as %v", traceID, gotL.TraceID)
+		t.Errorf("expect error with traceID as %v, got as %v", domain.TraceIDCtxKey, gotL.TraceID)
 	}
-
 }

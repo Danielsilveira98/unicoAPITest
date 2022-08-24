@@ -18,8 +18,6 @@ type log struct {
 	MetaData map[string]interface{} `json:"meta_data,omitempty"`
 }
 
-var jErrBase = `{"time": "%v", "level": "%s", "msg" "Error on marshal log: %s", "trace_id": "%s"}`
-
 type Logger struct {
 	writer io.Writer
 	pretty bool
@@ -75,11 +73,15 @@ func (l *Logger) print(ctx context.Context, lvl string, msg string, metaData map
 	}
 
 	if err != nil {
+		jErrBase := `{"time": "%v", "level": "%s", "msg" "Error on marshal log: %s", "trace_id": "%s"}`
 		jErr := fmt.Sprintf(jErrBase, now, domain.LogLevelError, err.Error(), traceID)
 		j = []byte(jErr)
 	}
 
-	l.writer.Write(append(j, []byte("\n")...))
+	_, err = l.writer.Write(append(j, []byte("\n")...))
+	if err != nil {
+		fmt.Printf("%v", err)
+	}
 }
 
 func getTraceID(ctx context.Context) string {

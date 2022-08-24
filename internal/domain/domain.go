@@ -1,10 +1,12 @@
 package domain
 
-var (
+type ctxKey string
+
+const (
 	LogLevelError   = "error"
 	LogLevelWarning = "warn"
 	LogLevelInfo    = "info"
 	LogLevelDebug   = "debug"
 
-	TraceIDCtxKey = "trace-id"
+	TraceIDCtxKey ctxKey = "trace-id"
 )
