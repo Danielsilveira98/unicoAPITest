@@ -2,15 +2,11 @@ package streetmarket
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/Danielsilveira98/unicoAPITest/internal/domain"
 	"github.com/google/go-cmp/cmp"
 )
-
-var errSome = errors.New("some error")
-var unexpectedErr = &domain.Error{Kind: domain.UnexpectedErrKd}
 
 type stubRepositoryWriter struct {
 	createSMInp domain.StreetMarket
@@ -122,7 +118,7 @@ func TestStreetMarketWriter_Create_Error(t *testing.T) {
 	}{
 		"When unexpected erro occurs in writer repository": {
 			wErr:  domain.UnexpectedErrKd,
-			rErr:  unexpectedErr,
+			rErr:  &domain.Error{Kind: domain.UnexpectedErrKd},
 			inp:   validInp,
 			IDGen: "70bb2026-9e6a-4dad-9f86-99dbddf3a087",
 		},
@@ -228,7 +224,7 @@ func TestStreetMarketWriter_Edit_Error(t *testing.T) {
 			id:   "51557ef2-dfe8-485d-90e0-c7adf4e59581",
 		},
 		"When a unexpected error occurs in repository": {
-			rErr: unexpectedErr,
+			rErr: &domain.Error{Kind: domain.UnexpectedErrKd},
 			wErr: domain.UnexpectedErrKd,
 			id:   "c882edc1-c1f3-4b20-b8f6-36156d99bc48",
 		},

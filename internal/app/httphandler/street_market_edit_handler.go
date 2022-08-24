@@ -23,7 +23,10 @@ type StreetMarketEditHandler struct {
 	logger streetMarketWriteHandlerLogger
 }
 
-func NewStreetMarketEditHandler(editor streetMarketEditor, logger streetMarketWriteHandlerLogger) *StreetMarketEditHandler {
+func NewStreetMarketEditHandler(
+	editor streetMarketEditor,
+	logger streetMarketWriteHandlerLogger,
+) *StreetMarketEditHandler {
 	return &StreetMarketEditHandler{editor, logger}
 }
 

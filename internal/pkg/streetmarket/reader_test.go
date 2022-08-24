@@ -136,7 +136,7 @@ func TestStreetMarketReader_List_Error(t *testing.T) {
 		"When a unexpected error occurs in reader repository": {
 			wErr: domain.UnexpectedErrKd,
 			inp:  domain.StreetMarketFilter{},
-			rErr: unexpectedErr,
+			rErr: &domain.Error{Kind: domain.UnexpectedErrKd},
 		},
 	}
 

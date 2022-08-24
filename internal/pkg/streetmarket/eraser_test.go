@@ -55,7 +55,7 @@ func TestStreetMarketEraser_Delete_Error(t *testing.T) {
 			ID:   "29336645-6243-4279-b7ff-47f1a64aa781",
 		},
 		"When a unexpected error occurs in repository": {
-			rErr: unexpectedErr,
+			rErr: &domain.Error{Kind: domain.UnexpectedErrKd},
 			wErr: domain.UnexpectedErrKd,
 			ID:   "6c34a17f-6330-4625-9184-25eb0a5c6533",
 		},

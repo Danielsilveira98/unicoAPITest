@@ -26,7 +26,10 @@ type StreetMarketListHandler struct {
 	logger streetMarketListHandlerLogger
 }
 
-func NewStreetMarketListHandler(getter streetMarketLister, logger streetMarketListHandlerLogger) *StreetMarketListHandler {
+func NewStreetMarketListHandler(
+	getter streetMarketLister,
+	logger streetMarketListHandlerLogger,
+) *StreetMarketListHandler {
 	return &StreetMarketListHandler{getter, logger}
 }
 

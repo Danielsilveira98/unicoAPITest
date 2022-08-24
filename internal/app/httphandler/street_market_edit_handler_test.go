@@ -22,7 +22,11 @@ type stubStreetMarketEditor struct {
 	edit      func(context.Context, domain.SMID, domain.StreetMarketEditInput) *domain.Error
 }
 
-func (s *stubStreetMarketEditor) Edit(ctx context.Context, ID domain.SMID, inp domain.StreetMarketEditInput) *domain.Error {
+func (s *stubStreetMarketEditor) Edit(
+	ctx context.Context,
+	ID domain.SMID,
+	inp domain.StreetMarketEditInput,
+) *domain.Error {
 	s.editInp = inp
 	s.editIDInp = ID
 	return s.edit(ctx, ID, inp)
