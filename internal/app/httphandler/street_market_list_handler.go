@@ -15,17 +15,23 @@ type streetMarketLister interface {
 	List(context.Context, int, domain.StreetMarketFilter) ([]domain.StreetMarket, error)
 }
 
+type streetMarketListHandlerLogger interface {
+	Error(context.Context, error)
+}
+
 type listStreetMarketResponse map[string][]streetMarketResponse
 
 type StreetMarketListHandler struct {
 	getter streetMarketLister
+	logger streetMarketListHandlerLogger
 }
 
-func NewStreetMarketListHandler(getter streetMarketLister) *StreetMarketListHandler {
-	return &StreetMarketListHandler{getter}
+func NewStreetMarketListHandler(getter streetMarketLister, logger streetMarketListHandlerLogger) *StreetMarketListHandler {
+	return &StreetMarketListHandler{getter, logger}
 }
 
 func (h *StreetMarketListHandler) Handle(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	f := domain.StreetMarketFilter{
 		District:     r.FormValue("district"),
 		Region5:      r.FormValue("region5"),
@@ -39,15 +45,16 @@ func (h *StreetMarketListHandler) Handle(w http.ResponseWriter, r *http.Request)
 	if page != "" {
 		pgn, err = strconv.Atoi(page)
 		if err != nil {
+			h.logger.Error(ctx, ErrInvalidQueryParam)
 			respondError(w, http.StatusBadRequest, ErrInvalidQueryParam.Error())
 			return
 		}
 	}
 
-	ls, err := h.getter.List(r.Context(), pgn, f)
-
+	ls, err := h.getter.List(ctx, pgn, f)
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+		h.logger.Error(ctx, err)
+		respondError(w, http.StatusInternalServerError, domain.ErrUnexpected.Error())
 		return
 	}
 

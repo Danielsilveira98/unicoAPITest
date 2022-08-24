@@ -28,6 +28,10 @@ func (s *stubStreetMarketLister) List(
 	return s.list(ctx, page, inp)
 }
 
+type stubLogger struct{}
+
+func (s *stubLogger) Error(context.Context, error) {}
+
 func TestStreetMarketListHandler_Handle(t *testing.T) {
 	page := 2
 	list := []domain.StreetMarket{{
@@ -89,7 +93,7 @@ func TestStreetMarketListHandler_Handle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h := NewStreetMarketListHandler(listerMock)
+	h := NewStreetMarketListHandler(listerMock, &stubLogger{})
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(h.Handle)
 	handler.ServeHTTP(rr, req)
@@ -151,7 +155,7 @@ func TestStreetMarketListHandler_Handle_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			h := NewStreetMarketListHandler(listerMock)
+			h := NewStreetMarketListHandler(listerMock, &stubLogger{})
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(h.Handle)
 			handler.ServeHTTP(rr, req)
