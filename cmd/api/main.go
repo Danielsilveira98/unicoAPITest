@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/Danielsilveira98/unicoAPITest/internal/app/httphandler"
+	"github.com/Danielsilveira98/unicoAPITest/internal/pkg/logger"
 	"github.com/Danielsilveira98/unicoAPITest/internal/pkg/repository"
 	"github.com/Danielsilveira98/unicoAPITest/internal/pkg/streetmarket"
 	"github.com/google/uuid"
@@ -28,6 +29,8 @@ func main() {
 		panic(err)
 	}
 
+	logger := logger.NewLogger(os.Stdout, true)
+
 	streetMarketRepository := repository.NewStreetMarketRepository(db)
 
 	writer := streetmarket.NewWriter(streetMarketRepository, uuid.NewString)
@@ -35,10 +38,10 @@ func main() {
 	reader := streetmarket.NewReader(streetMarketRepository)
 
 	pingHandler := httphandler.NewPingHandler()
-	streeMarketEditHandler := httphandler.NewStreetMarketEditHandler(writer)
-	streeMarketCreateHandler := httphandler.NewStreetMarketCreateHandler(writer)
-	streeMarketDeleteHandler := httphandler.NewStreetMarketDeleteHandler(eraser)
-	streeMarketListHandler := httphandler.NewStreetMarketListHandler(reader)
+	streeMarketEditHandler := httphandler.NewStreetMarketEditHandler(writer, logger)
+	streeMarketCreateHandler := httphandler.NewStreetMarketCreateHandler(writer, logger)
+	streeMarketDeleteHandler := httphandler.NewStreetMarketDeleteHandler(eraser, logger)
+	streeMarketListHandler := httphandler.NewStreetMarketListHandler(reader, logger)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/ping", pingHandler.Handle).Methods(http.MethodGet)
