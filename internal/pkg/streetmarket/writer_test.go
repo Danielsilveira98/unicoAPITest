@@ -10,23 +10,21 @@ import (
 )
 
 var errSome = errors.New("some error")
+var unexpectedErr = &domain.Error{Kind: domain.UnexpectedErrKd}
 
 type stubRepositoryWriter struct {
 	createSMInp domain.StreetMarket
-	create      func(ctx context.Context, sm domain.StreetMarket) error
+	create      func(ctx context.Context, sm domain.StreetMarket) *domain.Error
 	updateInp   domain.StreetMarket
-	update      func(ctx context.Context, sm domain.StreetMarket) error
+	update      func(ctx context.Context, sm domain.StreetMarket) *domain.Error
 }
 
-func (s *stubRepositoryWriter) Create(
-	ctx context.Context,
-	sm domain.StreetMarket,
-) error {
+func (s *stubRepositoryWriter) Create(ctx context.Context, sm domain.StreetMarket) *domain.Error {
 	s.createSMInp = sm
 	return s.create(ctx, sm)
 }
 
-func (s *stubRepositoryWriter) Update(ctx context.Context, sm domain.StreetMarket) error {
+func (s *stubRepositoryWriter) Update(ctx context.Context, sm domain.StreetMarket) *domain.Error {
 	s.updateInp = sm
 	return s.update(ctx, sm)
 }
@@ -35,7 +33,7 @@ func TestStreetMarketWriter_Create(t *testing.T) {
 	want := "d00443e8-160d-4099-8a93-442a183be369"
 
 	repoMock := &stubRepositoryWriter{
-		create: func(ctx context.Context, sm domain.StreetMarket) error {
+		create: func(ctx context.Context, sm domain.StreetMarket) *domain.Error {
 			return nil
 		},
 	}
@@ -117,26 +115,26 @@ func TestStreetMarketWriter_Create_Error(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		rErr  error
+		rErr  *domain.Error
 		IDGen string
 		inp   domain.StreetMarketCreateInput
-		wErr  error
+		wErr  domain.KindError
 	}{
 		"When unexpected erro occurs in writer repository": {
-			wErr:  domain.ErrUnexpected,
-			rErr:  errSome,
+			wErr:  domain.UnexpectedErrKd,
+			rErr:  unexpectedErr,
 			inp:   validInp,
 			IDGen: "70bb2026-9e6a-4dad-9f86-99dbddf3a087",
 		},
 		"When input is invalid": {
-			wErr: domain.ErrInpValidation,
+			wErr: domain.InpValidationErrKd,
 			inp:  domain.StreetMarketCreateInput{},
 		},
 	}
 	for title, tc := range testCases {
 		t.Run(title, func(t *testing.T) {
 			repoMock := &stubRepositoryWriter{
-				create: func(ctx context.Context, sm domain.StreetMarket) error {
+				create: func(ctx context.Context, sm domain.StreetMarket) *domain.Error {
 					return tc.rErr
 				},
 			}
@@ -149,8 +147,8 @@ func TestStreetMarketWriter_Create_Error(t *testing.T) {
 
 			_, gErr := srv.Create(context.TODO(), tc.inp)
 
-			if !errors.Is(gErr, tc.wErr) {
-				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
+			if gErr.Kind != tc.wErr {
+				t.Errorf("Want error kind %v, got error %v", tc.wErr, gErr.Kind)
 			}
 		})
 	}
@@ -158,7 +156,7 @@ func TestStreetMarketWriter_Create_Error(t *testing.T) {
 
 func TestStreetMarketWriter_Edit(t *testing.T) {
 	repoMock := &stubRepositoryWriter{
-		update: func(ctx context.Context, sm domain.StreetMarket) error {
+		update: func(ctx context.Context, sm domain.StreetMarket) *domain.Error {
 			return nil
 		},
 	}
@@ -220,22 +218,22 @@ func TestStreetMarketWriter_Edit(t *testing.T) {
 
 func TestStreetMarketWriter_Edit_Error(t *testing.T) {
 	testCases := map[string]struct {
-		rErr error
-		wErr error
+		rErr *domain.Error
+		wErr domain.KindError
 		id   domain.SMID
 	}{
 		"When entity not exists": {
-			rErr: domain.ErrNothingUpdated,
-			wErr: domain.ErrSMNotFound,
+			rErr: &domain.Error{Kind: domain.NothingUpdatedErrKd},
+			wErr: domain.SMNotFoundErrKd,
 			id:   "51557ef2-dfe8-485d-90e0-c7adf4e59581",
 		},
 		"When a unexpected error occurs in repository": {
-			rErr: errSome,
-			wErr: domain.ErrUnexpected,
+			rErr: unexpectedErr,
+			wErr: domain.UnexpectedErrKd,
 			id:   "c882edc1-c1f3-4b20-b8f6-36156d99bc48",
 		},
 		"When id is invalid": {
-			wErr: domain.ErrInpValidation,
+			wErr: domain.InpValidationErrKd,
 			id:   "invalid",
 		},
 	}
@@ -243,7 +241,7 @@ func TestStreetMarketWriter_Edit_Error(t *testing.T) {
 	for title, tc := range testCases {
 		t.Run(title, func(t *testing.T) {
 			repoMock := &stubRepositoryWriter{
-				update: func(ctx context.Context, sm domain.StreetMarket) error {
+				update: func(ctx context.Context, sm domain.StreetMarket) *domain.Error {
 					return tc.rErr
 				},
 			}
@@ -254,8 +252,8 @@ func TestStreetMarketWriter_Edit_Error(t *testing.T) {
 
 			gErr := srv.Edit(context.TODO(), tc.id, domain.StreetMarketEditInput{})
 
-			if !errors.Is(gErr, tc.wErr) {
-				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
+			if gErr.Kind != tc.wErr {
+				t.Errorf("Want error kind %v, got error %v", tc.wErr, gErr.Kind)
 			}
 		})
 	}

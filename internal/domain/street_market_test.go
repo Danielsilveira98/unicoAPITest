@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"errors"
 	"testing"
 )
 
@@ -18,10 +17,8 @@ func TestSMID_Validate(t *testing.T) {
 func TestSMID_Validate_Error(t *testing.T) {
 	var smid SMID = "invalid"
 
-	err := smid.Validate()
-
-	if !errors.Is(err, ErrInpValidation) {
-		t.Errorf("want error %v, got %v", ErrInpValidation, err)
+	if err := smid.Validate(); err != nil {
+		t.Errorf("expect nil, got %v", err)
 	}
 }
 

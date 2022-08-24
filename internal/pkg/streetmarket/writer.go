@@ -2,14 +2,13 @@ package streetmarket
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Danielsilveira98/unicoAPITest/internal/domain"
 )
 
 type repositoryWriter interface {
-	Create(ctx context.Context, streetMarket domain.StreetMarket) error
-	Update(ctx context.Context, sm domain.StreetMarket) error
+	Create(ctx context.Context, streetMarket domain.StreetMarket) *domain.Error
+	Update(ctx context.Context, sm domain.StreetMarket) *domain.Error
 }
 
 type uuidGenerator func() string
@@ -23,9 +22,13 @@ func NewWriter(repo repositoryWriter, idGen uuidGenerator) *StreetMarketWriter {
 	return &StreetMarketWriter{repo, idGen}
 }
 
-func (s *StreetMarketWriter) Create(ctx context.Context, inp domain.StreetMarketCreateInput) (string, error) {
+func (s *StreetMarketWriter) Create(ctx context.Context, inp domain.StreetMarketCreateInput) (string, *domain.Error) {
 	if err := inp.Validate(); err != nil {
-		return "", fmt.Errorf("%w", err)
+		return "", &domain.Error{
+			Kind:     domain.InpValidationErrKd,
+			Msg:      "Invalid input",
+			Previous: err,
+		}
 	}
 
 	sm := domain.StreetMarket{
@@ -50,18 +53,19 @@ func (s *StreetMarketWriter) Create(ctx context.Context, inp domain.StreetMarket
 
 	err := s.repo.Create(ctx, sm)
 	if err != nil {
-		switch err {
-		default:
-			return "", domain.ErrUnexpected
-		}
+		return "", &domain.Error{Kind: domain.UnexpectedErrKd, Msg: "Unexpected error when create", Previous: err}
 	}
 
 	return sm.ID, nil
 }
 
-func (s *StreetMarketWriter) Edit(ctx context.Context, ID domain.SMID, inp domain.StreetMarketEditInput) error {
+func (s *StreetMarketWriter) Edit(ctx context.Context, ID domain.SMID, inp domain.StreetMarketEditInput) *domain.Error {
 	if err := ID.Validate(); err != nil {
-		return fmt.Errorf("%w", err)
+		return &domain.Error{
+			Kind:     domain.InpValidationErrKd,
+			Msg:      "Invalid input",
+			Previous: err,
+		}
 	}
 
 	sm := domain.StreetMarket{
@@ -86,11 +90,11 @@ func (s *StreetMarketWriter) Edit(ctx context.Context, ID domain.SMID, inp domai
 
 	err := s.repo.Update(ctx, sm)
 	if err != nil {
-		switch err {
-		case domain.ErrNothingUpdated:
-			return domain.ErrSMNotFound
+		switch err.Kind {
+		case domain.NothingUpdatedErrKd:
+			return &domain.Error{Kind: domain.SMNotFoundErrKd, Msg: "Entity not exists", Previous: err}
 		default:
-			return domain.ErrUnexpected
+			return &domain.Error{Kind: domain.UnexpectedErrKd, Msg: "Unexpected error when edit", Previous: err}
 		}
 	}
 

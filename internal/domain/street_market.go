@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,9 +8,9 @@ import (
 
 type SMID string
 
-func (s *SMID) Validate() error {
+func (s *SMID) Validate() *Error {
 	if _, err := uuid.Parse(string(*s)); err != nil {
-		return fmt.Errorf("%w IS is an invalid UUID.", ErrInpValidation)
+		return &Error{Kind: InpValidationErrKd, Msg: err.Error()}
 	}
 
 	return nil
@@ -64,54 +63,54 @@ type StreetMarketCreateInput struct {
 	AddrExtraInfo string
 }
 
-func (d *StreetMarketCreateInput) Validate() error {
+func (d *StreetMarketCreateInput) Validate() *Error {
 	if d.Long == 0.0 {
-		return fmt.Errorf("%w Long is required", ErrInpValidation)
+		return &Error{Kind: InpValidationErrKd, Msg: "Long is required"}
 	}
 	if d.Lat == 0.0 {
-		return fmt.Errorf("%w Lat is required", ErrInpValidation)
+		return &Error{Kind: InpValidationErrKd, Msg: "Lat is required"}
 	}
 	if d.SectCens == "" {
-		return fmt.Errorf("%w SectCens is required", ErrInpValidation)
+		return &Error{Kind: InpValidationErrKd, Msg: "SectCens is required"}
 	}
 	if d.Area == "" {
-		return fmt.Errorf("%w Area is required", ErrInpValidation)
+		return &Error{Kind: InpValidationErrKd, Msg: "Area is required"}
 	}
 	if d.IDdist == "" {
-		return fmt.Errorf("%w IDdist is required", ErrInpValidation)
+		return &Error{Kind: InpValidationErrKd, Msg: "IDdist is required"}
 	}
 	if d.District == "" {
-		return fmt.Errorf("%w District is required", ErrInpValidation)
+		return &Error{Kind: InpValidationErrKd, Msg: "District is required"}
 	}
 	if d.IDSubTH == "" {
-		return fmt.Errorf("%w IDSubTH is required", ErrInpValidation)
+		return &Error{Kind: InpValidationErrKd, Msg: "IDSubTH is required"}
 	}
 	if d.SubTownHall == "" {
-		return fmt.Errorf("%w SubTownHall is required", ErrInpValidation)
+		return &Error{Kind: InpValidationErrKd, Msg: "SubTownHall is required"}
 	}
 	if d.Region5 == "" {
-		return fmt.Errorf("%w Region5 is required", ErrInpValidation)
+		return &Error{Kind: InpValidationErrKd, Msg: "Region5 is required"}
 	}
 	if d.Region8 == "" {
-		return fmt.Errorf("%w Region8 is required", ErrInpValidation)
+		return &Error{Kind: InpValidationErrKd, Msg: "Region8 is required"}
 	}
 	if d.Name == "" {
-		return fmt.Errorf("%w Name is required", ErrInpValidation)
+		return &Error{Kind: InpValidationErrKd, Msg: "Name is required"}
 	}
 	if d.Register == "" {
-		return fmt.Errorf("%w Register is required", ErrInpValidation)
+		return &Error{Kind: InpValidationErrKd, Msg: "Register is required"}
 	}
 	if d.Street == "" {
-		return fmt.Errorf("%w Street is required", ErrInpValidation)
+		return &Error{Kind: InpValidationErrKd, Msg: "Street is required"}
 	}
 	if d.Number == "" {
-		return fmt.Errorf("%w Number is required", ErrInpValidation)
+		return &Error{Kind: InpValidationErrKd, Msg: "Number is required"}
 	}
 	if d.Neighborhood == "" {
-		return fmt.Errorf("%w Neighborhood is required", ErrInpValidation)
+		return &Error{Kind: InpValidationErrKd, Msg: "Neighborhood is required"}
 	}
 	if d.AddrExtraInfo == "" {
-		return fmt.Errorf("%w AddrExtraInfo is required", ErrInpValidation)
+		return &Error{Kind: InpValidationErrKd, Msg: "AddrExtraInfo is required"}
 	}
 
 	return nil
