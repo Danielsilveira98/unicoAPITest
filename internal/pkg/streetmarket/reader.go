@@ -2,6 +2,7 @@ package streetmarket
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Danielsilveira98/unicoAPITest/internal/domain"
 )
@@ -41,7 +42,8 @@ func (s *StreetMarketReader) List(
 
 	ls, err := s.repo.List(ctx, pc, filter)
 	if err != nil {
-		return nil, domain.ErrUnexpected
+		err := fmt.Errorf("[repo.List] %s %w", domain.ErrUnexpected.Error(), err)
+		return nil, err
 	}
 
 	return ls, nil

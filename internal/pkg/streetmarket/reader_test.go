@@ -157,7 +157,7 @@ func TestStreetMarketReader_List_Error(t *testing.T) {
 
 			_, gErr := srv.List(context.TODO(), 0, tc.inp)
 
-			if !errors.Is(gErr, tc.wErr) {
+			if !errors.As(gErr, &tc.wErr) {
 				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
 			}
 		})
