@@ -30,7 +30,12 @@ func main() {
 		panic(err)
 	}
 
-	logger := logger.NewLogger(os.Stdout, true)
+	ioWriter, err := os.OpenFile(os.Getenv("LOG_FILE_PATH"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		panic(err)
+	}
+
+	logger := logger.NewLogger(ioWriter, true)
 
 	streetMarketRepository := repository.NewStreetMarketRepository(db)
 

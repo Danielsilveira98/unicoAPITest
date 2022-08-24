@@ -16,7 +16,6 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /server ./cmd/api
 
 FROM scratch
 COPY --from=builder /server /
-COPY --from=builder /app/deployment/migrations /
-# run ls
+COPY --from=builder /app/deployment /
 EXPOSE 8000
 ENTRYPOINT ["/server"]

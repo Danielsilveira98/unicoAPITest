@@ -15,6 +15,9 @@ services:
       - DB_NAME=${DB_NAME:-postgres}
       - DB_DIALECT=postgres
       - MIGRATIONS_PATH=/migrations
+      - LOG_FILE_PATH=/logs/api.log
+    volumes:
+       - ./log:/logs
     depends_on:
       - postgres
     networks:

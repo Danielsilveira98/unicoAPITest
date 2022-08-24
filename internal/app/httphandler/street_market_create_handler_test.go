@@ -18,7 +18,10 @@ type stubStreetMarketCreator struct {
 	create    func(context.Context, domain.StreetMarketCreateInput) (string, *domain.Error)
 }
 
-func (s *stubStreetMarketCreator) Create(ctx context.Context, inp domain.StreetMarketCreateInput) (string, *domain.Error) {
+func (s *stubStreetMarketCreator) Create(
+	ctx context.Context,
+	inp domain.StreetMarketCreateInput,
+) (string, *domain.Error) {
 	s.createInp = inp
 	return s.create(ctx, inp)
 }
