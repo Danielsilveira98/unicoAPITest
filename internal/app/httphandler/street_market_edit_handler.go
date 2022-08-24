@@ -3,7 +3,6 @@ package httphandler
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -12,28 +11,42 @@ import (
 )
 
 type streetMarketEditor interface {
-	Edit(ctx context.Context, ID domain.SMID, inp domain.StreetMarketEditInput) error
+	Edit(ctx context.Context, ID domain.SMID, inp domain.StreetMarketEditInput) *domain.Error
+}
+
+type streetMarketWriteHandlerLogger interface {
+	Error(context.Context, domain.Error)
 }
 
 type StreetMarketEditHandler struct {
 	editor streetMarketEditor
+	logger streetMarketWriteHandlerLogger
 }
 
-func NewStreetMarketEditHandler(editor streetMarketEditor) *StreetMarketEditHandler {
-	return &StreetMarketEditHandler{editor}
+func NewStreetMarketEditHandler(editor streetMarketEditor, logger streetMarketWriteHandlerLogger) *StreetMarketEditHandler {
+	return &StreetMarketEditHandler{editor, logger}
 }
 
 func (h *StreetMarketEditHandler) Handle(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var body streetMarketBody
 
 	bb, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		h.logger.Error(ctx, domain.Error{
+			Kind: domain.UnexpectedErrKd,
+			Msg:  err.Error(),
+		})
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	defer r.Body.Close()
 
 	if err := json.Unmarshal(bb, &body); err != nil {
+		h.logger.Error(ctx, domain.Error{
+			Kind: domain.InpValidationErrKd,
+			Msg:  err.Error(),
+		})
 		respondError(w, http.StatusBadRequest, "malformed body")
 		return
 	}
@@ -60,22 +73,22 @@ func (h *StreetMarketEditHandler) Handle(w http.ResponseWriter, r *http.Request)
 		AddrExtraInfo: body.AddrExtraInfo,
 	}
 
-	err = h.editor.Edit(r.Context(), id, input)
+	dErr := h.editor.Edit(r.Context(), id, input)
 
-	if err != nil {
-		fmt.Printf("%v", err)
+	if dErr != nil {
 		var status int
 
-		switch err {
-		case domain.ErrInpValidation:
+		switch dErr.Kind {
+		case domain.InpValidationErrKd:
 			status = http.StatusBadRequest
-		case domain.ErrSMNotFound:
+		case domain.SMNotFoundErrKd:
 			status = http.StatusNotFound
 		default:
+			h.logger.Error(ctx, *dErr)
 			status = http.StatusInternalServerError
 		}
 
-		respondError(w, status, err.Error())
+		respondError(w, status, dErr.Error())
 		return
 	}
 

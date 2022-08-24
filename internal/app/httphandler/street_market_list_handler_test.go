@@ -15,14 +15,14 @@ import (
 type stubStreetMarketLister struct {
 	listInp   domain.StreetMarketFilter
 	listPgInp int
-	list      func(context.Context, int, domain.StreetMarketFilter) ([]domain.StreetMarket, error)
+	list      func(context.Context, int, domain.StreetMarketFilter) ([]domain.StreetMarket, *domain.Error)
 }
 
 func (s *stubStreetMarketLister) List(
 	ctx context.Context,
 	page int,
 	inp domain.StreetMarketFilter,
-) ([]domain.StreetMarket, error) {
+) ([]domain.StreetMarket, *domain.Error) {
 	s.listInp = inp
 	s.listPgInp = page
 	return s.list(ctx, page, inp)
@@ -30,7 +30,7 @@ func (s *stubStreetMarketLister) List(
 
 type stubLogger struct{}
 
-func (s *stubLogger) Error(context.Context, error) {}
+func (s *stubLogger) Error(context.Context, domain.Error) {}
 
 func TestStreetMarketListHandler_Handle(t *testing.T) {
 	page := 2
@@ -77,7 +77,7 @@ func TestStreetMarketListHandler_Handle(t *testing.T) {
 	}
 
 	listerMock := &stubStreetMarketLister{
-		list: func(ctx context.Context, page int, inp domain.StreetMarketFilter) ([]domain.StreetMarket, error) {
+		list: func(ctx context.Context, page int, inp domain.StreetMarketFilter) ([]domain.StreetMarket, *domain.Error) {
 			return list, nil
 		},
 	}
@@ -123,21 +123,21 @@ func TestStreetMarketListHandler_Handle(t *testing.T) {
 
 func TestStreetMarketListHandler_Handle_Error(t *testing.T) {
 	testCases := map[string]struct {
-		listerErr    error
+		listerErr    *domain.Error
 		wantStatusCd int
 		wantBody     ErrorResponse
 		path         string
 	}{
 		"Unexpected error": {
-			listerErr:    domain.ErrUnexpected,
+			listerErr:    &domain.Error{Kind: domain.UnexpectedErrKd, Msg: "Error"},
 			wantStatusCd: http.StatusInternalServerError,
-			wantBody:     ErrorResponse{"error": domain.ErrUnexpected.Error()},
+			wantBody:     ErrorResponse{"error": "Error"},
 			path:         "/street_market",
 		},
 		"Param page invalid": {
-			listerErr:    ErrInvalidQueryParam,
+			listerErr:    &domain.Error{Kind: domain.InpValidationErrKd},
 			wantStatusCd: http.StatusBadRequest,
-			wantBody:     ErrorResponse{"error": ErrInvalidQueryParam.Error()},
+			wantBody:     ErrorResponse{"error": "Page can be integer"},
 			path:         "/street_market?page=invalid",
 		},
 	}
@@ -145,7 +145,7 @@ func TestStreetMarketListHandler_Handle_Error(t *testing.T) {
 	for title, tc := range testCases {
 		t.Run(title, func(t *testing.T) {
 			listerMock := &stubStreetMarketLister{
-				list: func(ctx context.Context, page int, inp domain.StreetMarketFilter) ([]domain.StreetMarket, error) {
+				list: func(ctx context.Context, page int, inp domain.StreetMarketFilter) ([]domain.StreetMarket, *domain.Error) {
 					return nil, tc.listerErr
 				},
 			}

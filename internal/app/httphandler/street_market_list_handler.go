@@ -12,11 +12,11 @@ import (
 var ErrInvalidQueryParam = errors.New("query param is invalid")
 
 type streetMarketLister interface {
-	List(context.Context, int, domain.StreetMarketFilter) ([]domain.StreetMarket, error)
+	List(context.Context, int, domain.StreetMarketFilter) ([]domain.StreetMarket, *domain.Error)
 }
 
 type streetMarketListHandlerLogger interface {
-	Error(context.Context, error)
+	Error(context.Context, domain.Error)
 }
 
 type listStreetMarketResponse map[string][]streetMarketResponse
@@ -45,16 +45,19 @@ func (h *StreetMarketListHandler) Handle(w http.ResponseWriter, r *http.Request)
 	if page != "" {
 		pgn, err = strconv.Atoi(page)
 		if err != nil {
-			h.logger.Error(ctx, ErrInvalidQueryParam)
-			respondError(w, http.StatusBadRequest, ErrInvalidQueryParam.Error())
+			h.logger.Error(ctx, domain.Error{
+				Kind: domain.InpValidationErrKd,
+				Msg:  err.Error(),
+			})
+			respondError(w, http.StatusBadRequest, "Page can be integer")
 			return
 		}
 	}
 
-	ls, err := h.getter.List(ctx, pgn, f)
-	if err != nil {
-		h.logger.Error(ctx, err)
-		respondError(w, http.StatusInternalServerError, domain.ErrUnexpected.Error())
+	ls, dErr := h.getter.List(ctx, pgn, f)
+	if dErr != nil {
+		h.logger.Error(ctx, *dErr)
+		respondError(w, http.StatusInternalServerError, dErr.Error())
 		return
 	}
 

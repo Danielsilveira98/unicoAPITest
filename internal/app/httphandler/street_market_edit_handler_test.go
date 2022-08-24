@@ -19,10 +19,10 @@ import (
 type stubStreetMarketEditor struct {
 	editIDInp domain.SMID
 	editInp   domain.StreetMarketEditInput
-	edit      func(context.Context, domain.SMID, domain.StreetMarketEditInput) error
+	edit      func(context.Context, domain.SMID, domain.StreetMarketEditInput) *domain.Error
 }
 
-func (s *stubStreetMarketEditor) Edit(ctx context.Context, ID domain.SMID, inp domain.StreetMarketEditInput) error {
+func (s *stubStreetMarketEditor) Edit(ctx context.Context, ID domain.SMID, inp domain.StreetMarketEditInput) *domain.Error {
 	s.editInp = inp
 	s.editIDInp = ID
 	return s.edit(ctx, ID, inp)
@@ -68,7 +68,7 @@ func TestStreetMarketEditHandler_Handle(t *testing.T) {
 	}
 
 	editorMock := &stubStreetMarketEditor{
-		edit: func(ctx context.Context, ID domain.SMID, inp domain.StreetMarketEditInput) error {
+		edit: func(ctx context.Context, ID domain.SMID, inp domain.StreetMarketEditInput) *domain.Error {
 			return nil
 		},
 	}
@@ -84,7 +84,7 @@ func TestStreetMarketEditHandler_Handle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h := NewStreetMarketEditHandler(editorMock)
+	h := NewStreetMarketEditHandler(editorMock, &stubLogger{})
 	rr := httptest.NewRecorder()
 	r := mux.NewRouter()
 	r.HandleFunc("/street_market/{street-market-id}", h.Handle)
@@ -103,37 +103,37 @@ func TestStreetMarketEditHandler_Handle_Error(t *testing.T) {
 	testCases := map[string]struct {
 		rBody        streetMarketBody
 		id           string
-		editorErr    error
+		editorErr    *domain.Error
 		wantStatusCd int
 		wantBody     ErrorResponse
 	}{
 		"Invalid id": {
 			rBody:        streetMarketBody{},
 			id:           "invalid",
-			editorErr:    domain.ErrInpValidation,
+			editorErr:    &domain.Error{Kind: domain.InpValidationErrKd, Msg: "Error"},
 			wantStatusCd: http.StatusBadRequest,
-			wantBody:     ErrorResponse{"error": domain.ErrInpValidation.Error()},
+			wantBody:     ErrorResponse{"error": "Error"},
 		},
 		"Unexpected error": {
 			rBody:        streetMarketBody{},
 			id:           "70ec02cb-0e4a-44cc-b0f7-83c040cb83ea",
-			editorErr:    domain.ErrUnexpected,
+			editorErr:    &domain.Error{Kind: domain.UnexpectedErrKd, Msg: "Unexpected"},
 			wantStatusCd: http.StatusInternalServerError,
-			wantBody:     ErrorResponse{"error": domain.ErrUnexpected.Error()},
+			wantBody:     ErrorResponse{"error": "Unexpected"},
 		},
 		"Street Market not founded": {
 			rBody:        streetMarketBody{},
 			id:           "70ec02cb-0e4a-44cc-b0f7-83c040cb83ea",
-			editorErr:    domain.ErrSMNotFound,
+			editorErr:    &domain.Error{Kind: domain.SMNotFoundErrKd, Msg: "SM not found"},
 			wantStatusCd: http.StatusNotFound,
-			wantBody:     ErrorResponse{"error": domain.ErrSMNotFound.Error()},
+			wantBody:     ErrorResponse{"error": "SM not found"},
 		},
 	}
 
 	for title, tc := range testCases {
 		t.Run(title, func(t *testing.T) {
 			editorMock := &stubStreetMarketEditor{
-				edit: func(ctx context.Context, id domain.SMID, inp domain.StreetMarketEditInput) error {
+				edit: func(ctx context.Context, id domain.SMID, inp domain.StreetMarketEditInput) *domain.Error {
 					return tc.editorErr
 				},
 			}
@@ -149,7 +149,7 @@ func TestStreetMarketEditHandler_Handle_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			h := NewStreetMarketEditHandler(editorMock)
+			h := NewStreetMarketEditHandler(editorMock, &stubLogger{})
 			rr := httptest.NewRecorder()
 			r := mux.NewRouter()
 			r.HandleFunc("/street_market/{street-market-id}", h.Handle)
@@ -179,7 +179,7 @@ func TestStreetMarketEditHandler_Handle_Error(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		h := NewStreetMarketEditHandler(&stubStreetMarketEditor{})
+		h := NewStreetMarketEditHandler(&stubStreetMarketEditor{}, &stubLogger{})
 		rr := httptest.NewRecorder()
 		r := mux.NewRouter()
 		r.HandleFunc("/street_market/{street-market-id}", h.Handle)
