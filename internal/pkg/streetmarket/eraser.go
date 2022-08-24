@@ -21,7 +21,7 @@ func NewEraser(repo repositoryEraser) *StreetMarketEraser {
 
 func (s *StreetMarketEraser) Delete(ctx context.Context, ID domain.SMID) error {
 	if err := ID.Validate(); err != nil {
-		return fmt.Errorf("%w", err)
+		return fmt.Errorf("[ID.Validate] %s %w", domain.ErrInpValidation.Error(), err)
 	}
 
 	if err := s.repo.DeleteByID(ctx, string(ID)); err != nil {
