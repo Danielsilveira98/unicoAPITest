@@ -2,7 +2,6 @@ package streetmarket
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/Danielsilveira98/unicoAPITest/internal/domain"
@@ -13,14 +12,14 @@ import (
 type stubRepositoryReader struct {
 	listFInp  domain.StreetMarketFilter
 	listPCInp domain.Pagination
-	list      func(context.Context, domain.Pagination, domain.StreetMarketFilter) ([]domain.StreetMarket, error)
+	list      func(context.Context, domain.Pagination, domain.StreetMarketFilter) ([]domain.StreetMarket, *domain.Error)
 }
 
 func (s *stubRepositoryReader) List(
 	ctx context.Context,
 	pc domain.Pagination,
 	query domain.StreetMarketFilter,
-) ([]domain.StreetMarket, error) {
+) ([]domain.StreetMarket, *domain.Error) {
 	s.listFInp = query
 	s.listPCInp = pc
 	return s.list(ctx, pc, query)
@@ -52,7 +51,7 @@ func TestStreetMarketReader_List(t *testing.T) {
 			ctx context.Context,
 			pc domain.Pagination,
 			query domain.StreetMarketFilter,
-		) ([]domain.StreetMarket, error) {
+		) ([]domain.StreetMarket, *domain.Error) {
 			return want, nil
 		},
 	}
@@ -130,14 +129,14 @@ func TestStreetMarketReader_List(t *testing.T) {
 
 func TestStreetMarketReader_List_Error(t *testing.T) {
 	testCases := map[string]struct {
-		wErr error
+		wErr domain.KindError
 		inp  domain.StreetMarketFilter
-		rErr error
+		rErr *domain.Error
 	}{
 		"When a unexpected error occurs in reader repository": {
-			wErr: domain.ErrUnexpected,
+			wErr: domain.UnexpectedErrKd,
 			inp:  domain.StreetMarketFilter{},
-			rErr: errSome,
+			rErr: unexpectedErr,
 		},
 	}
 
@@ -148,7 +147,7 @@ func TestStreetMarketReader_List_Error(t *testing.T) {
 					ctx context.Context,
 					pc domain.Pagination,
 					query domain.StreetMarketFilter,
-				) ([]domain.StreetMarket, error) {
+				) ([]domain.StreetMarket, *domain.Error) {
 					return nil, tc.rErr
 				},
 			}
@@ -157,8 +156,8 @@ func TestStreetMarketReader_List_Error(t *testing.T) {
 
 			_, gErr := srv.List(context.TODO(), 0, tc.inp)
 
-			if !errors.As(gErr, &tc.wErr) {
-				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
+			if gErr.Kind != tc.wErr {
+				t.Errorf("Want error kind %v, got error %v", tc.wErr, gErr.Kind)
 			}
 		})
 	}

@@ -2,13 +2,12 @@ package streetmarket
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Danielsilveira98/unicoAPITest/internal/domain"
 )
 
 type repositoryReader interface {
-	List(context.Context, domain.Pagination, domain.StreetMarketFilter) ([]domain.StreetMarket, error)
+	List(context.Context, domain.Pagination, domain.StreetMarketFilter) ([]domain.StreetMarket, *domain.Error)
 }
 
 type StreetMarketReader struct {
@@ -23,7 +22,7 @@ func (s *StreetMarketReader) List(
 	ctx context.Context,
 	page int,
 	query domain.StreetMarketFilter,
-) ([]domain.StreetMarket, error) {
+) ([]domain.StreetMarket, *domain.Error) {
 	const perPage = 100
 
 	pc := domain.Pagination{}
@@ -42,8 +41,7 @@ func (s *StreetMarketReader) List(
 
 	ls, err := s.repo.List(ctx, pc, filter)
 	if err != nil {
-		err := fmt.Errorf("[repo.List] %s %w", domain.ErrUnexpected.Error(), err)
-		return nil, err
+		return nil, &domain.Error{Kind: domain.UnexpectedErrKd, Msg: "Unexpected error when listing", Previous: err}
 	}
 
 	return ls, nil
