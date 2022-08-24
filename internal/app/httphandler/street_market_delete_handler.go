@@ -9,18 +9,27 @@ import (
 )
 
 type streetMarketEraser interface {
-	Delete(context.Context, domain.SMID) error
+	Delete(context.Context, domain.SMID) *domain.Error
+}
+
+type streetMarketDeleteHandlerLogger interface {
+	Error(context.Context, domain.Error)
 }
 
 type StreetMarketDeleteHandler struct {
 	eraser streetMarketEraser
+	logger streetMarketWriteHandlerLogger
 }
 
-func NewStreetMarketDeleteHandler(repo streetMarketEraser) *StreetMarketDeleteHandler {
-	return &StreetMarketDeleteHandler{repo}
+func NewStreetMarketDeleteHandler(
+	repo streetMarketEraser,
+	logger streetMarketWriteHandlerLogger,
+) *StreetMarketDeleteHandler {
+	return &StreetMarketDeleteHandler{repo, logger}
 }
 
 func (h *StreetMarketDeleteHandler) Handle(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	vars := mux.Vars(r)
 	id := domain.SMID(vars["street-market-id"])
 
@@ -29,12 +38,13 @@ func (h *StreetMarketDeleteHandler) Handle(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		var status int
 
-		switch err {
-		case domain.ErrInpValidation:
+		switch err.Kind {
+		case domain.InpValidationErrKd:
 			status = http.StatusBadRequest
-		case domain.ErrSMNotFound:
+		case domain.SMNotFoundErrKd:
 			status = http.StatusNotFound
 		default:
+			h.logger.Error(ctx, *err)
 			status = http.StatusInternalServerError
 		}
 

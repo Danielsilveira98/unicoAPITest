@@ -15,10 +15,10 @@ import (
 
 type stubStreetMarketEraser struct {
 	deleteInp domain.SMID
-	delete    func(context.Context, domain.SMID) error
+	delete    func(context.Context, domain.SMID) *domain.Error
 }
 
-func (s *stubStreetMarketEraser) Delete(ctx context.Context, id domain.SMID) error {
+func (s *stubStreetMarketEraser) Delete(ctx context.Context, id domain.SMID) *domain.Error {
 	s.deleteInp = id
 	return s.delete(ctx, id)
 }
@@ -27,7 +27,7 @@ func TestStreetMarketDeleteHandler_Handle(t *testing.T) {
 	id := domain.SMID("cdd2028a-fd0b-4734-97e7-ef2e57e9009b")
 
 	eraserMock := &stubStreetMarketEraser{
-		delete: func(ctx context.Context, s domain.SMID) error {
+		delete: func(ctx context.Context, s domain.SMID) *domain.Error {
 			return nil
 		},
 	}
@@ -38,7 +38,7 @@ func TestStreetMarketDeleteHandler_Handle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h := NewStreetMarketDeleteHandler(eraserMock)
+	h := NewStreetMarketDeleteHandler(eraserMock, &stubLogger{})
 	rr := httptest.NewRecorder()
 	r := mux.NewRouter()
 	r.HandleFunc("/street_market/{street-market-id}", h.Handle)
@@ -60,34 +60,34 @@ func TestStreetMarketDeleteHandler_Handle(t *testing.T) {
 func TestStreetMarketDeleteHandler_Handle_Error(t *testing.T) {
 	testCases := map[string]struct {
 		id           string
-		eraserErr    error
+		eraserErr    *domain.Error
 		wantStatusCd int
 		wantBody     ErrorResponse
 	}{
 		"Unexpected error": {
 			id:           "5e5e1905-282f-4038-b8c9-bc1719174892",
-			eraserErr:    domain.ErrUnexpected,
+			eraserErr:    &domain.Error{Kind: domain.UnexpectedErrKd, Msg: "Unexpected"},
 			wantStatusCd: http.StatusInternalServerError,
-			wantBody:     ErrorResponse{"error": domain.ErrUnexpected.Error()},
+			wantBody:     ErrorResponse{"error": "Unexpected"},
 		},
 		"Invalid person id": {
 			id:           "id",
-			eraserErr:    domain.ErrInpValidation,
+			eraserErr:    &domain.Error{Kind: domain.InpValidationErrKd, Msg: "Error"},
 			wantStatusCd: http.StatusBadRequest,
-			wantBody:     ErrorResponse{"error": domain.ErrInpValidation.Error()},
+			wantBody:     ErrorResponse{"error": "Error"},
 		},
 		"Street Market not founded": {
 			id:           "id",
-			eraserErr:    domain.ErrSMNotFound,
+			eraserErr:    &domain.Error{Kind: domain.SMNotFoundErrKd, Msg: "SM not found"},
 			wantStatusCd: http.StatusNotFound,
-			wantBody:     ErrorResponse{"error": domain.ErrSMNotFound.Error()},
+			wantBody:     ErrorResponse{"error": "SM not found"},
 		},
 	}
 
 	for title, tc := range testCases {
 		t.Run(title, func(t *testing.T) {
 			eraserMock := &stubStreetMarketEraser{
-				delete: func(ctx context.Context, s domain.SMID) error {
+				delete: func(ctx context.Context, s domain.SMID) *domain.Error {
 					return tc.eraserErr
 				},
 			}
@@ -98,7 +98,7 @@ func TestStreetMarketDeleteHandler_Handle_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			h := NewStreetMarketDeleteHandler(eraserMock)
+			h := NewStreetMarketDeleteHandler(eraserMock, &stubLogger{})
 			rr := httptest.NewRecorder()
 			r := mux.NewRouter()
 			r.HandleFunc("/street_market/{street-market-id}", h.Handle)
