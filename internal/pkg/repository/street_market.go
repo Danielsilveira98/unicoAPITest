@@ -42,7 +42,7 @@ func (r *StreetMarketRepository) List(
 	q := fmt.Sprintf("%s ORDER BY createdat DESC OFFSET %v LIMIT %v", bq, pg.Offset, pg.Limit)
 	res, err := r.db.QueryContext(ctx, q, args...)
 	if err != nil {
-		return nil, fmt.Errorf("%w", domain.ErrUnexpected)
+		return nil, fmt.Errorf("[QueryContext] %w", err)
 	}
 
 	rrs := []domain.StreetMarket{}
@@ -68,7 +68,7 @@ func (r *StreetMarketRepository) List(
 			&sm.AddrExtraInfo,
 			&sm.CreatedAt,
 		); err != nil {
-			return nil, fmt.Errorf("%w", domain.ErrUnexpected)
+			return nil, fmt.Errorf("[Scan] %w", domain.ErrUnexpected)
 		}
 		rrs = append(rrs, sm)
 	}
@@ -85,12 +85,12 @@ func (r *StreetMarketRepository) Create(ctx context.Context, streetMarket domain
 
 	qr, err := r.db.ExecContext(ctx, q, args...)
 	if err != nil {
-		return fmt.Errorf("%w", domain.ErrUnexpected)
+		return fmt.Errorf("[ExecContext] %w", err)
 	}
 
 	ra, err := qr.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("%w", domain.ErrUnexpected)
+		return fmt.Errorf("[RowsAffected] %w", err)
 	}
 
 	if ra < 1 {
@@ -119,12 +119,12 @@ func (r *StreetMarketRepository) Update(ctx context.Context, sm domain.StreetMar
 	args = append(args, id)
 	qr, err := r.db.ExecContext(ctx, q, args...)
 	if err != nil {
-		return fmt.Errorf("%w", domain.ErrUnexpected)
+		return fmt.Errorf("[ExecContext] %w", err)
 	}
 
 	ra, err := qr.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("%w", domain.ErrUnexpected)
+		return fmt.Errorf("[RowsAffected] %w", err)
 	}
 
 	if ra < 1 {
@@ -139,12 +139,12 @@ func (r *StreetMarketRepository) DeleteByID(ctx context.Context, ID string) erro
 
 	qr, err := r.db.ExecContext(ctx, q, ID)
 	if err != nil {
-		return fmt.Errorf("%w", domain.ErrUnexpected)
+		return fmt.Errorf("[ExecContext] %w", err)
 	}
 
 	ra, err := qr.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("%w", domain.ErrNothingDeleted)
+		return fmt.Errorf("[RowsAffected] %w", err)
 	}
 
 	if ra < 1 {

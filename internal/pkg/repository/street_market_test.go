@@ -43,7 +43,7 @@ func TestStreetMarketRepository_Delete_Error(t *testing.T) {
 		id     string
 	}{
 		"When unexpected error occurs": {
-			wErr: domain.ErrUnexpected,
+			wErr: errSome,
 			mErr: errSome,
 			id:   "822d08fb-6dbd-457b-a467-36ee3a136b13",
 		},
@@ -128,7 +128,7 @@ func TestStreetMarketRepository_Create_Error(t *testing.T) {
 		mErr          error
 	}{
 		"When unexpected error occurs": {
-			wErr: domain.ErrUnexpected,
+			wErr: errSome,
 			mErr: errSome,
 		},
 		"When create nothing": {
@@ -314,7 +314,7 @@ func TestStreetMarketRepository_List_Error(t *testing.T) {
 		mErr error
 	}{
 		"When unexpected error occurs": {
-			wErr: domain.ErrUnexpected,
+			wErr: errSome,
 			mErr: errSome,
 		},
 	}
@@ -385,7 +385,7 @@ func TestStreetMarketRepository_Update_Error(t *testing.T) {
 		mErr          error
 	}{
 		"When unexpected error occurs": {
-			wErr: domain.ErrUnexpected,
+			wErr: errSome,
 			mErr: errSome,
 		},
 		"When create nothing": {
