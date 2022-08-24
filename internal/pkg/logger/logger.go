@@ -3,8 +3,10 @@ package logger
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/Danielsilveira98/unicoAPITest/internal/domain"
@@ -23,21 +25,23 @@ type Logger struct {
 	pretty bool
 }
 
+var errEmpty = errors.New("")
+
 func NewLogger(writer io.Writer, pretty bool) *Logger {
 	return &Logger{writer, pretty}
 }
 
 func (l *Logger) Info(ctx context.Context, msg string) {
-	l.print(ctx, domain.LogLevelInfo, msg, nil)
+	l.Infof(ctx, msg, nil)
 }
 func (l *Logger) Debug(ctx context.Context, msg string) {
-	l.print(ctx, domain.LogLevelDebug, msg, nil)
+	l.Debugf(ctx, msg, nil)
 }
 func (l *Logger) Warn(ctx context.Context, msg string) {
-	l.print(ctx, domain.LogLevelWarning, msg, nil)
+	l.Warnf(ctx, msg, nil)
 }
-func (l *Logger) Error(ctx context.Context, msg string) {
-	l.print(ctx, domain.LogLevelError, msg, nil) // TODO write with an other writer
+func (l *Logger) Error(ctx context.Context, err error) {
+	l.Errorf(ctx, err, nil)
 }
 func (l *Logger) Infof(ctx context.Context, msg string, md map[string]interface{}) {
 	l.print(ctx, domain.LogLevelInfo, msg, md)
@@ -48,7 +52,30 @@ func (l *Logger) Debugf(ctx context.Context, msg string, md map[string]interface
 func (l *Logger) Warnf(ctx context.Context, msg string, md map[string]interface{}) {
 	l.print(ctx, domain.LogLevelWarning, msg, md)
 }
-func (l *Logger) Errorf(ctx context.Context, msg string, md map[string]interface{}) {
+func (l *Logger) Errorf(ctx context.Context, err error, md map[string]interface{}) {
+	if err == nil {
+		err = errEmpty
+	}
+
+	msg := err.Error()
+	wErr := errors.Unwrap(err)
+
+	if wErr != nil {
+		msg = strings.ReplaceAll(msg, wErr.Error(), "")
+
+		lvl := 1
+		stackTrace := map[string]string{}
+		unwarp := true
+		for unwarp {
+			stackTrace[fmt.Sprintf("%v", lvl)] = wErr.Error()
+			wErr = errors.Unwrap(wErr)
+			if wErr == nil {
+				unwarp = false
+			}
+		}
+		md["stack_trace"] = stackTrace
+	}
+	msg = strings.TrimSpace(msg)
 	l.print(ctx, domain.LogLevelError, msg, md) // TODO write with an other writer
 }
 
