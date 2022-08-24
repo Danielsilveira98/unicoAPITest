@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/Danielsilveira98/unicoAPITest/internal/app/httphandler"
+	"github.com/Danielsilveira98/unicoAPITest/internal/app/middleware"
 	"github.com/Danielsilveira98/unicoAPITest/internal/pkg/logger"
 	"github.com/Danielsilveira98/unicoAPITest/internal/pkg/repository"
 	"github.com/Danielsilveira98/unicoAPITest/internal/pkg/streetmarket"
@@ -38,17 +39,22 @@ func main() {
 	reader := streetmarket.NewReader(streetMarketRepository)
 
 	pingHandler := httphandler.NewPingHandler()
-	streeMarketEditHandler := httphandler.NewStreetMarketEditHandler(writer, logger)
-	streeMarketCreateHandler := httphandler.NewStreetMarketCreateHandler(writer, logger)
-	streeMarketDeleteHandler := httphandler.NewStreetMarketDeleteHandler(eraser, logger)
-	streeMarketListHandler := httphandler.NewStreetMarketListHandler(reader, logger)
+	streetMarketEditHandler := httphandler.NewStreetMarketEditHandler(writer, logger)
+	streetMarketCreateHandler := httphandler.NewStreetMarketCreateHandler(writer, logger)
+	streetMarketDeleteHandler := httphandler.NewStreetMarketDeleteHandler(eraser, logger)
+	streetMarketListHandler := httphandler.NewStreetMarketListHandler(reader, logger)
+
+	tcIdMidd := middleware.NewTraceIDMiddleware(uuid.NewString)
+	logReqMidd := middleware.NewLogRequestMiddleware(logger)
 
 	r := mux.NewRouter()
+	r.Use(tcIdMidd.Middleware())
+	r.Use(logReqMidd.Middleware())
 	r.HandleFunc("/ping", pingHandler.Handle).Methods(http.MethodGet)
-	r.HandleFunc("/street_market", streeMarketListHandler.Handle).Methods(http.MethodGet)
-	r.HandleFunc("/street_market", streeMarketCreateHandler.Handle).Methods(http.MethodPost)
-	r.HandleFunc("/street_market/{street-market-id}", streeMarketDeleteHandler.Handle).Methods(http.MethodDelete)
-	r.HandleFunc("/street_market/{street-market-id}", streeMarketEditHandler.Handle).Methods(http.MethodPatch)
+	r.HandleFunc("/street_market", streetMarketListHandler.Handle).Methods(http.MethodGet)
+	r.HandleFunc("/street_market", streetMarketCreateHandler.Handle).Methods(http.MethodPost)
+	r.HandleFunc("/street_market/{street-market-id}", streetMarketDeleteHandler.Handle).Methods(http.MethodDelete)
+	r.HandleFunc("/street_market/{street-market-id}", streetMarketEditHandler.Handle).Methods(http.MethodPatch)
 
 	log.Fatal(http.ListenAndServe(":8000", r))
 }
