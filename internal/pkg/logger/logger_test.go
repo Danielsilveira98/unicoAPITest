@@ -80,14 +80,27 @@ func TestLogger_print(t *testing.T) {
 }
 
 func TestLogget_getTraceID(t *testing.T) {
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, domain.TraceIDCtxKey, traceID)
+	t.Run("With keys in context", func(t *testing.T) {
+		ctx := context.Background()
+		ctx = context.WithValue(ctx, domain.TraceIDCtxKey, traceID)
 
-	id := getTraceID(ctx)
+		id := getTraceID(ctx)
 
-	if id != traceID {
-		t.Errorf("expect id %s, got %s", traceID, id)
-	}
+		if id != traceID {
+			t.Errorf("expect id %s, got %s", traceID, id)
+		}
+	})
+
+	t.Run("Without keys in context", func(t *testing.T) {
+		ctx := context.Background()
+		ctx = context.WithValue(ctx, domain.TraceIDCtxKey, nil)
+
+		id := getTraceID(ctx)
+
+		if "" != id {
+			t.Errorf("expect id \"\", got %s", id)
+		}
+	})
 }
 
 func TestLogger_Infof(t *testing.T) {
@@ -453,7 +466,8 @@ func TestLogger_Error(t *testing.T) {
 
 	lgg := NewLogger(writerMock, false)
 
-	var errInp = errors.New("Some error")
+	errB := errors.New("Base")
+	errInp := fmt.Errorf("%s %w", msg, errB)
 
 	lgg.Error(ctx, errInp)
 
@@ -472,11 +486,19 @@ func TestLogger_Error(t *testing.T) {
 		t.Errorf("expect error with level as %v, got as %v", domain.LogLevelError, gotL.Level)
 	}
 
-	if errInp.Error() != gotL.Msg {
+	if msg != gotL.Msg {
 		t.Errorf("expect error with msg as %v, got as %v", msg, gotL.Msg)
 	}
 
 	if traceID != gotL.TraceID {
 		t.Errorf("expect error with traceID as %v, got as %v", domain.TraceIDCtxKey, gotL.TraceID)
+	}
+
+	wMetaData := map[string]interface{}{}
+	wMetaData["stack_trace"] = map[string]interface{}{
+		"1": errB.Error(),
+	}
+	if diff := cmp.Diff(wMetaData, gotL.MetaData); diff != "" {
+		t.Errorf("unexpected metaData (-want +got):\n%s", diff)
 	}
 }

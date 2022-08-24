@@ -73,6 +73,9 @@ func (l *Logger) Errorf(ctx context.Context, err error, md map[string]interface{
 				unwarp = false
 			}
 		}
+		if md == nil {
+			md = map[string]interface{}{}
+		}
 		md["stack_trace"] = stackTrace
 	}
 	msg = strings.TrimSpace(msg)
@@ -112,5 +115,9 @@ func (l *Logger) print(ctx context.Context, lvl string, msg string, metaData map
 }
 
 func getTraceID(ctx context.Context) string {
-	return ctx.Value(domain.TraceIDCtxKey).(string)
+	v := ctx.Value(domain.TraceIDCtxKey)
+	if v == nil {
+		return ""
+	}
+	return v.(string)
 }
