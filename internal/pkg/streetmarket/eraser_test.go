@@ -74,7 +74,7 @@ func TestStreetMarketEraser_Delete_Error(t *testing.T) {
 
 			gErr := srv.Delete(context.TODO(), tc.ID)
 
-			if !errors.Is(gErr, tc.wErr) {
+			if !errors.As(gErr, &tc.wErr) {
 				t.Errorf("Want error %v, got error %v", tc.wErr, gErr)
 			}
 		})

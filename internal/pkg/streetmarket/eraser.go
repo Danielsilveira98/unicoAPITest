@@ -25,12 +25,15 @@ func (s *StreetMarketEraser) Delete(ctx context.Context, ID domain.SMID) error {
 	}
 
 	if err := s.repo.DeleteByID(ctx, string(ID)); err != nil {
+		var msg string
 		switch err {
 		case domain.ErrNothingDeleted:
-			return domain.ErrSMNotFound
+			msg = domain.ErrSMNotFound.Error()
 		default:
-			return domain.ErrUnexpected
+			msg = domain.ErrUnexpected.Error()
 		}
+
+		return fmt.Errorf("[repo.DeleteByID] %s %w", msg, err)
 	}
 
 	return nil
