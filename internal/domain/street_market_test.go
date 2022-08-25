@@ -17,8 +17,13 @@ func TestSMID_Validate(t *testing.T) {
 func TestSMID_Validate_Error(t *testing.T) {
 	var smid SMID = "invalid"
 
-	if err := smid.Validate(); err != nil {
-		t.Errorf("expect nil, got %v", err)
+	err := smid.Validate()
+	if err == nil {
+		t.Error("expect error, got nil")
+	}
+
+	if err.Kind != InpValidationErrKd {
+		t.Errorf("expect error kind %s,  got %s", InpValidationErrKd, err.Kind)
 	}
 }
 

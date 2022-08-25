@@ -292,3 +292,11 @@ Json com o seguinte esquema:
 | chave  	| tipo  	| descrição   	|
 |---	|---	|---	|
 |  error 	| string  	| Mensagem de erro  	|
+
+
+
+## Todo
+- Test dos middlewares
+- Controle de level no Logger
+- Opção configurável de pretty no log.
+- Adicionar ID como chave no contexto e adicionar no log.
